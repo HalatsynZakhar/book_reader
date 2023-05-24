@@ -71,10 +71,14 @@ while True:
 
         inpExit = input("")
         os.system('cls||clear')
+        with open('bookmark.txt', 'w') as file:
+            file.write(str(bookmark))
         if inpExit != "":
-            with open('bookmark.txt', 'w') as file:
-                file.write(str(bookmark))
-            exit()
+            try:
+                bookmark+=int(inpExit)
+            except:
+                exit()
+
 
 
     bookmark += 1
