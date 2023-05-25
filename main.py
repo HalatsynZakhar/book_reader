@@ -1,5 +1,5 @@
 import os
-
+import pyttsx3
 from googletrans import Translator
 
 
@@ -14,6 +14,8 @@ def out_yellow(text):
 def out_blue(text):
     print("\033[34m{}\033[37m".format(text), end="")
 
+
+engine = pyttsx3.init()
 
 # чтение файла (указан путь к примеру файлу txt)
 with open('Cambias James. A Darkling Sea - royallib.com.txt', encoding='windows-1251') as f:
@@ -50,10 +52,17 @@ while True:
 
         if i==0:
             out_yellow(currentParagraph[0:index_sentence[i]+1])
+
+            engine.say(currentParagraph[0:index_sentence[i]+1])
+
+
             print(currentParagraph[index_sentence[i]+1::], end="")
         else:
             print(currentParagraph[0:index_sentence[i-1]+1], end="")
             out_yellow(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
+
+            engine.say(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
+
             print(currentParagraph[index_sentence[i]+1::], end="")
 
         print("\n")
@@ -69,6 +78,7 @@ while True:
             except:
                 pass
 
+        engine.runAndWait()
         inpExit = input("")
         os.system('cls||clear')
         with open('bookmark.txt', 'w') as file:
