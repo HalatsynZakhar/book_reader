@@ -1,6 +1,13 @@
 import os
 #import pyttsx3
 from googletrans import Translator
+# pip install googletrans==3.1.0a0
+
+from gtts import gTTS
+# https://github.com/pndurette/gTTS
+
+from playsound import playsound
+# pip install playsound==1.2.2
 
 def out_red(text):
     print("\033[31m{}\033[37m".format(text), end="")
@@ -15,6 +22,8 @@ def out_blue(text):
 
 
 #engine = pyttsx3.init()
+tts_play = True
+
 
 # чтение файла (указан путь к примеру файлу txt)
 with open('Cambias James. A Darkling Sea - royallib.com.txt', encoding='windows-1251') as f:
@@ -53,7 +62,7 @@ while True:
             out_yellow(currentParagraph[0:index_sentence[i]+1])
 
             #engine.say(currentParagraph[0:index_sentence[i]+1])
-
+            tts = gTTS(currentParagraph[0:index_sentence[i]+1])
 
             print(currentParagraph[index_sentence[i]+1::], end="")
         else:
@@ -61,6 +70,7 @@ while True:
             out_yellow(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
 
             #engine.say(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
+            tts = gTTS(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
 
             print(currentParagraph[index_sentence[i]+1::], end="")
 
@@ -77,7 +87,12 @@ while True:
             except:
                 pass
 
+
         #engine.runAndWait()
+        tts.save('sentence.mp3')
+        if tts_play:
+            playsound('sentence.mp3')
+            os.remove('sentence.mp3')
         inpExit = input("")
         os.system('cls||clear')
         with open('bookmark.txt', 'w') as file:
@@ -87,7 +102,5 @@ while True:
                 bookmark+=int(inpExit)
             except:
                 exit()
-
-
 
     bookmark += 1

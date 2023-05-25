@@ -1,5 +1,15 @@
+import os
+
 from gtts import gTTS
-from gtts.tokenizer import pre_processors
-tts = gTTS(""""“This changes everything,” said Dickie. “That thing evens the odds.” Graves was as excited about the gun as Rob was, that much anyone could see.""")
+# https://github.com/pndurette/gTTS
+
+from playsound import playsound
+# pip install playsound==1.2.2
+
+tts = gTTS("""“This changes""")
 tts.save('hello.mp3')
-playsound('hello.mp3')
+
+for i in range(10):
+    playsound('hello.mp3')
+
+os.remove('hello.mp3')
