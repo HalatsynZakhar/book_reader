@@ -2,7 +2,6 @@ import os
 import pyttsx3
 from googletrans import Translator
 
-
 def out_red(text):
     print("\033[31m{}\033[37m".format(text), end="")
 
