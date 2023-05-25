@@ -1,5 +1,10 @@
 import os
+from random import randint
+from time import sleep
+
 #import pyttsx3
+# simple tts, poor quality
+
 from googletrans import Translator
 # pip install googletrans==3.1.0a0
 
@@ -8,6 +13,8 @@ from gtts import gTTS
 
 from playsound import playsound
 # pip install playsound==1.2.2
+
+import pygame
 
 def out_red(text):
     print("\033[31m{}\033[37m".format(text), end="")
@@ -35,6 +42,8 @@ with open('bookmark.txt', encoding='windows-1251') as f:
     bookmark = int(f.read())
 
 os.system('cls||clear')
+
+
 while True:
     if bookmark == len(list_paragraph):
         break
@@ -60,18 +69,10 @@ while True:
 
         if i==0:
             out_yellow(currentParagraph[0:index_sentence[i]+1])
-
-            #engine.say(currentParagraph[0:index_sentence[i]+1])
-            tts = gTTS(currentParagraph[0:index_sentence[i]+1])
-
             print(currentParagraph[index_sentence[i]+1::], end="")
         else:
             print(currentParagraph[0:index_sentence[i-1]+1], end="")
             out_yellow(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
-
-            #engine.say(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
-            tts = gTTS(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
-
             print(currentParagraph[index_sentence[i]+1::], end="")
 
         print("\n")
@@ -87,13 +88,27 @@ while True:
             except:
                 pass
 
+        print("\n")
 
-        #engine.runAndWait()
-        tts.save('sentence.mp3')
         if tts_play:
-            playsound('sentence.mp3')
-            os.remove('sentence.mp3')
+            if i==0:
+                #engine.say(currentParagraph[0:index_sentence[i]+1])
+                tts = gTTS(currentParagraph[0:index_sentence[i]+1])
+            else:
+                #engine.say(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
+                tts = gTTS(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
+            tts.save('sentence.mp3')
+            #engine.runAndWait()
+
+            pygame.init()
+            song = pygame.mixer.Sound('sentence.mp3')
+            song.play()
+
         inpExit = input("")
+
+        if tts_play:
+            pygame.quit()
+
         os.system('cls||clear')
         with open('bookmark.txt', 'w') as file:
             file.write(str(bookmark))
