@@ -82,21 +82,25 @@ while True:
             print(text_trans[index_sentence_trans[i]+1::], end="")
         else:
             try:
-                print(text_trans[0:index_sentence_trans[i-1]+1], end="")
-                out_yellow(text_trans[index_sentence_trans[i-1]+1:index_sentence_trans[i]+1])
-                print(text_trans[index_sentence_trans[i]+1::], end="")
+                text1 = text_trans[0:index_sentence_trans[i-1]+1]
+                text2 = text_trans[index_sentence_trans[i - 1] + 1:index_sentence_trans[i] + 1]
+                text3 = text_trans[index_sentence_trans[i] + 1::]
+
+                print(text1, end="")
+                out_yellow(text2)
+                print(text3, end="")
             except:
-                pass
+                print(text_trans)
 
         print("\n")
 
         if tts_play:
             if i==0:
                 #engine.say(currentParagraph[0:index_sentence[i]+1])
-                tts = gTTS(currentParagraph[0:index_sentence[i]+1])
+                tts = gTTS(currentParagraph[0:index_sentence[i]+1], slow=True)
             else:
                 #engine.say(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
-                tts = gTTS(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1])
+                tts = gTTS(currentParagraph[index_sentence[i-1]+1:index_sentence[i]+1], slow=True)
             tts.save('sentence.mp3')
             #engine.runAndWait()
 
