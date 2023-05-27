@@ -48,6 +48,14 @@ while True:
         break
 
     currentParagraph = list_paragraph[bookmark]
+
+    if currentParagraph[0] == "\n":
+        """Обработка исключения, когда вначале лишний перевод строки
+        Указывает на смену темы"""
+        currentParagraph = currentParagraph[1::]
+        out_blue("***")
+        print()
+
     translator = Translator()
     transParagraph = translator.translate(currentParagraph, dest="ru")
     text_trans = transParagraph.text
