@@ -54,7 +54,7 @@ while True:
 
     index_sentence = []
     for i in range(len(currentParagraph)):
-        if currentParagraph[i] == "." or currentParagraph[i] == "?" or currentParagraph[i] == "!":
+        if currentParagraph[i] in [".", "?", "!", "…"]:
             if i >= 2:
                 if currentParagraph[i - 2:i] == "Dr":
                     """
@@ -62,12 +62,34 @@ while True:
                     Из-за этого несовпадение количества предложений и неккоректная синхронизация
                     """
                     continue
+            if i >= 1:
+                if currentParagraph[i - 1] == ".":
+                    continue
             index_sentence.append(i)
+
+    if len(index_sentence) == 0:
+        """обработка параграфов в несколько слов (Заголовков), когда отсутствуют разделители впринципе"""
+        index_sentence.append(len(currentParagraph) - 1)
+    elif (len(currentParagraph) - 1) - (index_sentence[-1]) >= 2:
+        """Обработка исключения, когда строка кончается не данными символами .?!... 
+        В таком случае окончание фиксируется по последнему симвлу """
+        index_sentence.append(len(currentParagraph) - 1)
 
     index_sentence_trans = []
     for i in range(len(text_trans)):
-        if text_trans[i] == "." or text_trans[i] == "?" or text_trans[i] == "!":
+        if text_trans[i] in [".", "?", "!", "…"]:
+            if i >= 1:
+                if text_trans[i - 1] == ".":
+                    continue
             index_sentence_trans.append(i)
+
+    if len(index_sentence_trans) == 0:
+        """обработка параграфов в несколько слов (Заголовков), когда отсутствуют разделители впринципе"""
+        index_sentence_trans.append(len(text_trans) - 1)
+    if (len(text_trans) - 1) - (index_sentence_trans[-1]) >= 2:
+        """Обработка исключения, когда строка кончается не данными символами .?!... 
+        В таком случае окончание фиксируется по последнему симвлу """
+        index_sentence_trans.append(len(text_trans) - 1)
 
     for i in range(len(index_sentence)):
         """Вывод параграфа и перевода, с выделением предложения"""
