@@ -1,40 +1,76 @@
+import os
 import sys
 
-import uint as uint
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import QIODevice
-from csv import writer
-
-import os
-from random import randint
-from time import sleep
-
-from PyQt5.QtGui import QColor, QFont
-# import pyttsx3
-# simple tts, poor quality
-
-from googletrans import Translator
-# pip install googletrans==3.1.0a0
-
-from gtts import gTTS
-# https://github.com/pndurette/gTTS
-
-from playsound import playsound
-# pip install playsound==1.2.2
-
 import pygame
+from PyQt5.QtCore import Qt
+
+from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser, QPushButton, QLabel, QSpinBox, QLineEdit
+from googletrans import Translator
+from gtts import gTTS
 
 
-class Window:
+class MyWindow(QWidget):
     def __init__(self, path_to_book, tts_play):
         super().__init__()
 
-        self.count = 0
-        self.app = QtWidgets.QApplication([])
-        self.ui = uic.loadUi("design.ui")
-        self.ui.setWindowTitle("SerialGUI")
+        # создаем главный вертикальный лейаут
+        main_layout = QVBoxLayout()
 
-        self.ui.setStyleSheet("background-color: #000000; color: #ffffff;")
+        # создаем textBrowser и добавляем его в вертикальный лейаут
+        self.text_browser = QTextBrowser()
+        main_layout.addWidget(self.text_browser)
+
+        # создаем горизонтальный лейаут
+        horizontal_layout = QHBoxLayout()
+
+        # создаем кнопку "previous" и добавляем ее в горизонтальный лейаут
+        previous_button = QPushButton("previous")
+        horizontal_layout.addWidget(previous_button)
+
+        # создаем label "Font size" и добавляем его в горизонтальный лейаут
+        font_size_label = QLabel("Font size")
+        horizontal_layout.addWidget(font_size_label)
+
+        # создаем spinBox и добавляем его в горизонтальный лейаут
+        self.spin_box = QSpinBox()
+        self.spin_box.setValue(36)
+        horizontal_layout.addWidget(self.spin_box)
+
+        # создаем кнопку "go to page" и добавляем ее в горизонтальный лейаут
+        go_to_page_button = QPushButton("go to page")
+        horizontal_layout.addWidget(go_to_page_button)
+
+        # создаем input поле и добавляем его в горизонтальный лейаут
+        self.input_field = QLineEdit()
+        horizontal_layout.addWidget(self.input_field)
+
+        # создаем кнопку "view current page" и добавляем ее в горизонтальный лейаут
+        view_current_page_button = QPushButton("view current page")
+        horizontal_layout.addWidget(view_current_page_button)
+
+        # создаем label "???" и добавляем его в горизонтальный лейаут
+        label1 = QLabel("???")
+        horizontal_layout.addWidget(label1)
+
+        # создаем кнопку "view pages" и добавляем ее в горизонтальный лейаут
+        view_pages_button = QPushButton("view pages")
+        horizontal_layout.addWidget(view_pages_button)
+
+        # создаем label "???" и добавляем его в горизонтальный лейаут
+        label2 = QLabel("???")
+        horizontal_layout.addWidget(label2)
+
+        # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
+        next_button = QPushButton("next")
+        horizontal_layout.addWidget(next_button)
+
+        # добавляем горизонтальный лейаут в вертикальный лейаут
+        main_layout.addLayout(horizontal_layout)
+
+        # устанавливаем вертикальный лейаут в качестве главного лейаута окна
+        self.setLayout(main_layout)
+
 
         # чтение файла (указан путь к примеру файлу txt)
         with open(path_to_book, encoding='windows-1251') as f:
@@ -44,7 +80,7 @@ class Window:
         list_paragraph = [x for x in list_paragraph if x]
         with open('bookmark.txt', encoding='windows-1251') as f:
             bookmark = int(f.read())
-
+        self.count = 0
         self.bookmark = bookmark
         self.tts_play = tts_play
         self.text = text
@@ -55,31 +91,32 @@ class Window:
             pygame.init()
 
 
-        self.ui.nextButton.clicked.connect(self.formint_output_text)
-        self.ui.spinBox.valueChanged.connect(self.changeFont)
+        next_button.clicked.connect(self.formint_output_text)
+        self.spin_box.valueChanged.connect(self.changeFont)
 
 
-        self.ui.show()
-        self.app.exec()
         if self.tts_play:
             pygame.quit()
+
+        self.formint_output_text()
+
     def changeFont(self):
-        num = self.ui.spinBox.value()
+        num = self.spinBox.value()
         font = QFont()
         font.setPointSize(num)
-        self.ui.textBrowser.setFont(font)
+        self.text_browser.setFont(font)
     def out_red(self, text):
-        self.ui.textBrowser.append('<span style="color: #ff0000;">{}</span>'.format(text))
+        self.text_browser.append('<span style="color: #ff0000;">{}</span>'.format(text))
 
     def out(self, text):
-        self.ui.textBrowser.append(text)
+        self.text_browser.append(text)
 
     def out_yellow(self, text):
-        self.ui.textBrowser.append('<span style="color: #ffff00;">{}</span>'.format(text))
+        self.text_browser.append('<span style="color: #ffff00;">{}</span>'.format(text))
 
 
     def out_blue(self, text):
-        self.ui.textBrowser.append('<span style="color: #0000ff;">{}</span>'.format(text))
+        self.text_browser.append('<span style="color: #0000ff;">{}</span>'.format(text))
 
     def formint_output_text(self):
 
@@ -87,13 +124,12 @@ class Window:
         if self.tts_play:
             pygame.quit()
 
-
         if self.bookmark == len(self.list_paragraph):
             exit()
 
         currentParagraph = self.list_paragraph[self.bookmark]
 
-        self.ui.textBrowser.setText("") # clean output
+        self.text_browser.setText("") # clean output
 
         if currentParagraph[0] == "\n":
             """Обработка исключения, когда вначале лишний перевод строки
@@ -207,4 +243,30 @@ class Window:
         with open('bookmark.txt', 'w') as file:
             file.write(str(self.bookmark))
 
-a_window = Window("Cambias James. A Darkling Sea - royallib.com.txt", True)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+
+    app.setStyle('Fusion')  # задаем стиль приложения
+    window = MyWindow("Cambias James. A Darkling Sea - royallib.com.txt", True)
+
+    # добавляем настройки для темной темы
+    palette = window.palette()
+    palette.setColor(palette.Window, QColor(53, 53, 53))
+    palette.setColor(palette.WindowText, Qt.white)
+    palette.setColor(palette.Base, QColor(25, 25, 25))
+    palette.setColor(palette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(palette.ToolTipBase, Qt.white)
+    palette.setColor(palette.ToolTipText, Qt.white)
+    palette.setColor(palette.Text, Qt.white)
+    palette.setColor(palette.Button, QColor(53, 53, 53))
+    palette.setColor(palette.ButtonText, Qt.white)
+    palette.setColor(palette.BrightText, Qt.red)
+    palette.setColor(palette.Link, QColor(42, 130, 218))
+    palette.setColor(palette.Highlight, QColor(42, 130, 218))
+    palette.setColor(palette.HighlightedText, Qt.black)
+    app.setPalette(palette)
+
+
+
+    window.show()
+    sys.exit(app.exec_())
