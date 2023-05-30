@@ -249,6 +249,7 @@ class MyWindow(QWidget):
 
     def handle_editing_finished(self):
         # обработчик событий, который будет вызываться при изменении поля
+        self.count = 0
         self.bookmark = int(self.input_field.text())
 
         self.input_field.clear()
