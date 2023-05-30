@@ -1,14 +1,17 @@
 import html
 import os
 import sys
+from time import sleep
 
+from PyQt5.QtCore import QSettings
 import re
 
 import nltk as nltk
 import pygame
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QEvent
 
-from PyQt5.QtGui import QFont, QColor, QPalette, QTextOption
+from PyQt5.QtGui import QFont, QColor, QPalette, QTextOption, QIntValidator
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser, QPushButton, QLabel, \
     QSpinBox, QLineEdit, QCheckBox, QTextEdit
 from googletrans import Translator
@@ -16,8 +19,44 @@ from gtts import gTTS
 
 
 class MyWindow(QWidget):
-    def __init__(self, path_to_book):
+    def __init__(self):
         super().__init__()
+
+        self.settings = QSettings("halatsyn_zakhar", "book_reader")
+
+        # Загрузка настроек
+        self.bookmark = self.settings.value("bookmark", 0)
+        self.count = self.settings.value("count", 0)
+        self.path_to_book = self.settings.value("path_to_book", "")
+        self.fontSize = self.settings.value("fontSize", 20)
+        self.audio_enabled = self.settings.value("audio_enabled", False)
+        self.slow_reading = self.settings.value("slow_reading", False)
+        self.view_current_page = self.settings.value("view_current_page", True)
+        self.view_all_pages = self.settings.value("view_all_pages", False)
+        self.night_toggle = self.settings.value("night_toggle", "fusion")
+        self.window_geometry_x = self.settings.value("window_geometry_x", 800)
+        self.window_geometry_y = self.settings.value("window_geometry_y", 600)
+        self.window_geometry_width = self.settings.value("window_geometry_width", 800)
+        self.window_geometry_height = self.settings.value("window_geometry_height", 600)
+
+        # Преобразование типов данных
+        self.bookmark = int(self.bookmark)
+        self.count = int(self.count)
+        self.fontSize = int(self.fontSize)
+        self.window_geometry_x = int(self.window_geometry_x)
+        self.window_geometry_y = int(self.window_geometry_y)
+        self.window_geometry_width = int(self.window_geometry_width)
+        self.window_geometry_height = int(self.window_geometry_height)
+
+        self.audio_enabled = True if self.audio_enabled.lower() == "true" else False
+        self.slow_reading = True if self.slow_reading.lower() == "true" else False
+        self.view_current_page = True if self.view_current_page.lower() == "true" else False
+        self.view_all_pages = True if self.view_all_pages.lower() == "true" else False
+
+        self.setGeometry(self.window_geometry_x, self.window_geometry_y, self.window_geometry_width,
+                         self.window_geometry_height)
+
+
 
         # создаем главный вертикальный лейаут
         main_layout = QVBoxLayout()
@@ -25,6 +64,9 @@ class MyWindow(QWidget):
         # создаем textBrowser и добавляем его в вертикальный лейаут
         self.text_browser = QTextBrowser()
         main_layout.addWidget(self.text_browser)
+        font = QtGui.QFont()
+        font.setPointSize(self.fontSize)
+        self.text_browser.setFont(font)
 
         # создаем горизонтальный лейаут
         horizontal_layout = QHBoxLayout()
@@ -34,12 +76,12 @@ class MyWindow(QWidget):
         horizontal_layout.addLayout(prev_buttons_layout)
 
         # создаем кнопку "prev prev" и добавляем ее в горизонтальный лейаут
-        prev_prev_button = QPushButton("prev paragraph")
+        prev_prev_button = QPushButton("Previous paragraph (Ctrl+Left)")
         prev_prev_button.setShortcut("Ctrl+Left")
         prev_buttons_layout.addWidget(prev_prev_button)
 
         # создаем кнопку "previous" и добавляем ее в горизонтальный лейаут
-        prev_button = QPushButton("previous")
+        prev_button = QPushButton("Previous (Left)")
         prev_button.setShortcut("Left")
         prev_buttons_layout.addWidget(prev_button)
 
@@ -49,7 +91,7 @@ class MyWindow(QWidget):
 
         # создаем spinBox и добавляем его в горизонтальный лейаут
         self.spin_box = QSpinBox()
-        self.spin_box.setValue(8)
+        self.spin_box.setValue(self.text_browser.font().pointSize())
         horizontal_layout.addWidget(self.spin_box)
 
         # создаем маленький вертикальный лейаут для аудио
@@ -60,48 +102,64 @@ class MyWindow(QWidget):
         repeat_button = QPushButton("Repeat")
         audio_setting_layout.addWidget(repeat_button)
 
-
-        self.switch_audio = QCheckBox("Audio", self)
+        self.switch_audio = QCheckBox("Audio (V)", self)
         audio_setting_layout.addWidget(self.switch_audio)
-        #self.switch_audio.toggle()
+        self.switch_audio.setShortcut("V")
+        if self.audio_enabled:
+            self.switch_audio.toggle()
 
         self.switch_audio_slow = QCheckBox("Slow", self)
         audio_setting_layout.addWidget(self.switch_audio_slow)
-        self.switch_audio_slow.toggle()
+        if self.slow_reading:
+            self.switch_audio_slow.toggle()
 
+        # создаем маленький вертикальный лейаут
+        go_to_page_layout = QVBoxLayout()
+        horizontal_layout.addLayout(go_to_page_layout)
 
         # создаем кнопку "go to page" и добавляем ее в горизонтальный лейаут
-        go_to_page_button = QPushButton("go to page")
-        horizontal_layout.addWidget(go_to_page_button)
+        self.go_to_page_label = QLabel("Go to page:")
+        go_to_page_layout.addWidget(self.go_to_page_label)
+        self.go_to_page_label.setMinimumWidth(60)
+        self.go_to_page_label.setMaximumWidth(100)
+        self.go_to_page_label.setAlignment(Qt.AlignCenter)
 
         # создаем input поле и добавляем его в горизонтальный лейаут
         self.input_field = QLineEdit()
-        horizontal_layout.addWidget(self.input_field)
+        go_to_page_layout.addWidget(self.input_field)
+        self.input_field.setMinimumWidth(40)
+        self.input_field.setMaximumWidth(100)
+        self.input_field.setAlignment(QtCore.Qt.AlignCenter)
 
         # создаем маленький вертикальный лейаут
         pages_layout = QVBoxLayout()
         horizontal_layout.addLayout(pages_layout)
 
+        self.switch_Hide_current_page = QCheckBox("View current page", self)
+        pages_layout.addWidget(self.switch_Hide_current_page)
+        if self.view_current_page:
+            self.switch_Hide_current_page.toggle()
 
-        switch_Hide_info = QCheckBox("View current page", self)
-        pages_layout.addWidget(switch_Hide_info)
-
-        switch_Hide_info = QCheckBox("View all pages", self)
-        pages_layout.addWidget(switch_Hide_info)
+        self.switch_Hide_all_pages = QCheckBox("View all pages", self)
+        pages_layout.addWidget(self.switch_Hide_all_pages)
+        if self.view_all_pages:
+            self.switch_Hide_all_pages.toggle()
 
         # создаем маленький вертикальный лейаут
         label_layout = QVBoxLayout()
         horizontal_layout.addLayout(label_layout)
 
         # создаем label "???" и добавляем его в горизонтальный лейаут
-        label1 = QLabel("???")
-        label_layout.addWidget(label1)
+        self.current_page_label = QLabel("?")
+        label_layout.addWidget(self.current_page_label)
+        self.current_page_label.setMinimumWidth(60)
+        self.current_page_label.setAlignment(Qt.AlignCenter)
 
         # создаем label "???" и добавляем его в горизонтальный лейаут
-        label2 = QLabel("???")
-        label_layout.addWidget(label2)
-
-
+        self.all_pages_label = QLabel("?")
+        label_layout.addWidget(self.all_pages_label)
+        self.all_pages_label.setMinimumWidth(60)
+        self.all_pages_label.setAlignment(Qt.AlignCenter)
 
         # создаем кнопку и добавляем ее в вертикальный лейаут
         toggle_button = QPushButton("Change toggle")
@@ -113,30 +171,25 @@ class MyWindow(QWidget):
         horizontal_layout.addLayout(next_next_layout)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
-        next_button = QPushButton("next sentence")
+        next_button = QPushButton("next sentence (Right)")
         next_button.setShortcut("Right")
         next_next_layout.addWidget(next_button)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
-        next_next_button = QPushButton("next paragraph")
+        next_next_button = QPushButton("next paragraph (Ctrl+Right)")
         next_next_button.setShortcut("Ctrl+Right")
         next_next_layout.addWidget(next_next_button)
 
         # добавляем горизонтальный лейаут в вертикальный лейаут
         main_layout.addLayout(horizontal_layout)
 
+        # создаем input поле и добавляем его в горизонтальный лейаут
+        self.input_path_to_file = QLineEdit()
+        main_layout.addWidget(self.input_path_to_file)
+        self.input_path_to_file.setAlignment(QtCore.Qt.AlignCenter)
+
         # устанавливаем вертикальный лейаут в качестве главного лейаута окна
         self.setLayout(main_layout)
-
-        # чтение файла (указан путь к примеру файлу txt)
-        with open(path_to_book, encoding='windows-1251') as f:
-            self.text = f.read()
-
-        self.list_paragraph = self.text.split("\n\n")
-        self.list_paragraph = [x for x in self.list_paragraph if x]
-        with open('bookmark.txt', encoding='windows-1251') as f:
-            self.bookmark = int(f.read())
-        self.count = 0
 
         # связываем кнопку со слотом
         toggle_button.clicked.connect(self.toggle_theme)
@@ -146,12 +199,105 @@ class MyWindow(QWidget):
         prev_prev_button.clicked.connect(self.prev_prev_button)
 
         self.switch_audio.stateChanged.connect(self.audio_switch)
-        self.formint_output_text()
         repeat_button.clicked.connect(self.repeat)
         # Соединение событий прокрутки колесика мыши и изменения размера шрифта в text_browser
         self.spin_box.valueChanged.connect(self.changeFont)
+        self.switch_Hide_all_pages.stateChanged.connect(self.hide_all_pages)
+        self.switch_Hide_current_page.stateChanged.connect(self.hide_curren_page)
+        # устанавливаем обработчик событий для поля input_field
+        self.input_field.editingFinished.connect(self.handle_editing_finished)
+        self.input_path_to_file.editingFinished.connect(self.handle_editing_path)
 
-        self.toggle_theme()
+
+        self.input_path_to_file.setPlaceholderText("{}".format(self.path_to_book))
+
+        # чтение файла (указан путь к примеру файлу txt)
+        self.read_txt()
+        if self.night_toggle == "fusion":
+            self.toggle_theme()
+
+    def read_txt(self):
+        self.text = ""
+        try:
+            with open(self.path_to_book, encoding='windows-1251') as f:
+                self.text = f.read()
+        except:
+            pass
+        if self.text == "":
+            self.text += "The path to the file is missing, or the file is invalid. Please enter a valid relative or absolute path " \
+            "in the input below"
+            self.count = 0
+            self.bookmark = 0
+
+        self.list_paragraph = self.text.split("\n\n")
+        self.list_paragraph = [x for x in self.list_paragraph if x]
+        self.formint_output_text()
+
+        # устанавливаем валидатор для ограничения ввода только целых чисел
+        validator = QIntValidator(0, len(self.list_paragraph) - 1, self)
+        self.input_field.setValidator(validator)
+
+
+    def handle_editing_path(self):
+        self.path_to_book = self.input_path_to_file.text()
+        self.input_path_to_file.setPlaceholderText("{}".format(self.path_to_book))
+
+        self.input_path_to_file.clearFocus()
+        self.input_path_to_file.clear()
+
+        self.read_txt()
+
+    def handle_editing_finished(self):
+        # обработчик событий, который будет вызываться при изменении поля
+        self.bookmark = int(self.input_field.text())
+
+        self.input_field.clear()
+        self.input_field.clearFocus()
+
+
+        self.formint_output_text()
+
+    def hide_curren_page2(self):
+        if self.switch_Hide_current_page.isChecked():
+            self.current_page_label.setText(str(self.bookmark))
+            if self.switch_Hide_all_pages.isChecked():
+                self.input_field.setPlaceholderText("{} / {}".format(self.bookmark, len(self.list_paragraph) - 1))
+            else:
+                self.input_field.setPlaceholderText("{} / ?".format(self.bookmark))
+        else:
+            self.current_page_label.setText(("?"))
+            if self.switch_Hide_all_pages.isChecked():
+                self.input_field.setPlaceholderText("? / {}".format(len(self.list_paragraph) - 1))
+            else:
+                self.input_field.setPlaceholderText("? / ?")
+
+    def hide_curren_page(self, state):
+        if state == Qt.Checked:
+            self.current_page_label.setText(str(self.bookmark))
+            if self.switch_Hide_all_pages.isChecked():
+                self.input_field.setPlaceholderText("{} / {}".format(self.bookmark, len(self.list_paragraph) - 1))
+            else:
+                self.input_field.setPlaceholderText("{} / ?".format(self.bookmark))
+        else:
+            self.current_page_label.setText(("?"))
+            if self.switch_Hide_all_pages.isChecked():
+                self.input_field.setPlaceholderText("? / {}".format(len(self.list_paragraph) - 1))
+            else:
+                self.input_field.setPlaceholderText("? / ?")
+
+    def hide_all_pages(self, state):
+        if state == Qt.Checked:
+            self.all_pages_label.setText(str(len(self.list_paragraph) - 1))
+            if self.switch_Hide_current_page.isChecked():
+                self.input_field.setPlaceholderText("{} / {}".format(self.bookmark, len(self.list_paragraph) - 1))
+            else:
+                self.input_field.setPlaceholderText("? / {}".format(len(self.list_paragraph) - 1))
+        else:
+            self.all_pages_label.setText(("?"))
+            if self.switch_Hide_current_page.isChecked():
+                self.input_field.setPlaceholderText("{} / ?".format(self.bookmark))
+            else:
+                self.input_field.setPlaceholderText("? / ?")
 
     def event(self, event):
         # Проверяем, что произошло событие колеса мыши с зажатой клавишей Ctrl
@@ -161,6 +307,7 @@ class MyWindow(QWidget):
             self.spin_box.setValue(font_size)  # Устанавливаем новое значение для spinBox
 
         return super().event(event)
+
     def repeat(self):
         pygame.quit()
         pygame.init()
@@ -187,24 +334,22 @@ class MyWindow(QWidget):
         # если счетчик достиг конца книги и направление вперед, то переводим его в начало
         if self.count == n:
             self.count = 0
-            self.bookmark += 1
-            with open('bookmark.txt', 'w') as file:
-                file.write(str(self.bookmark))
+            if self.bookmark != len(self.list_paragraph) - 1:
+                self.bookmark += 1
 
         self.formint_output_text()
 
     def next_next_button(self):
-        self.count = 0
-        self.bookmark += 1
-        with open('bookmark.txt', 'w') as file:
-            file.write(str(self.bookmark))
+        if self.bookmark != len(self.list_paragraph) - 1:
+            self.count = 0
+            self.bookmark += 1
+
         self.formint_output_text()
 
     def prev_button(self):
         if self.count == 0:
-            self.bookmark -= 1
-            with open('bookmark.txt', 'w') as file:
-                file.write(str(self.bookmark))
+            if self.bookmark != 0:
+                self.bookmark -= 1
 
             self.count = len(self.scan_sentence(self.list_paragraph[self.bookmark])) - 1
         else:
@@ -214,10 +359,8 @@ class MyWindow(QWidget):
 
     def prev_prev_button(self):
         self.count = 0
-
-        self.bookmark -= 1
-        with open('bookmark.txt', 'w') as file:
-            file.write(str(self.bookmark))
+        if self.bookmark != 0:
+            self.bookmark -= 1
 
         self.formint_output_text()
 
@@ -227,19 +370,19 @@ class MyWindow(QWidget):
             # переключаем на светлую тему
             QApplication.setStyle("windows")
             palette = QPalette()
-            palette.setColor(QPalette.Window, QColor(239, 240, 241))
-            palette.setColor(QPalette.WindowText, QColor(28, 28, 28))
-            palette.setColor(QPalette.Base, QColor(255, 255, 255))
-            palette.setColor(QPalette.AlternateBase, QColor(228, 228, 228))
-            palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 170))
-            palette.setColor(QPalette.ToolTipText, QColor(28, 28, 28))
-            palette.setColor(QPalette.Text, QColor(28, 28, 28))
-            palette.setColor(QPalette.Button, QColor(239, 240, 241))
-            palette.setColor(QPalette.ButtonText, QColor(28, 28, 28))
+            palette.setColor(QPalette.Window, QColor(255, 255, 255))
+            palette.setColor(QPalette.WindowText, QColor(27, 27, 27))
+            palette.setColor(QPalette.Base, QColor(240, 240, 240))
+            palette.setColor(QPalette.AlternateBase, QColor(255, 255, 255))
+            palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))
+            palette.setColor(QPalette.ToolTipText, QColor(27, 27, 27))
+            palette.setColor(QPalette.Text, QColor(27, 27, 27))
+            palette.setColor(QPalette.Button, QColor(240, 240, 240))
+            palette.setColor(QPalette.ButtonText, QColor(27, 27, 27))
             palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
-            palette.setColor(QPalette.Link, QColor(0, 0, 255))
-            palette.setColor(QPalette.Highlight, QColor(76, 175, 80))
-            palette.setColor(QPalette.HighlightedText, Qt.white)
+            palette.setColor(QPalette.Link, QColor(0, 122, 255))
+            palette.setColor(QPalette.Highlight, QColor(0, 122, 255))
+            palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
             QApplication.setPalette(palette)
         else:
             # переключаем на темную тему, как в предыдущем примере
@@ -287,22 +430,22 @@ class MyWindow(QWidget):
         return text
 
     def out_red(self, text, end="\n"):
-        self.text_browser.insertHtml('<span style="color: #ff0000;">{}</span>'.format(self.filter_text(text+end)))
+        self.text_browser.insertHtml('<span style="color: #ff0000;">{}</span>'.format(self.filter_text(text + end)))
 
     def out(self, text, end="\n"):
         self.text_browser.insertHtml(self.filter_text(text + end))
 
     def out_marker1(self, text, end="\n"):
         if self.style().objectName() == "fusion":
-            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text+end)))
+            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text + end)))
         else:
-            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text+end)))
+            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text + end)))
 
     def out_marker2(self, text, end="\n"):
         if self.style().objectName() == "fusion":
-            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text+end)))
+            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text + end)))
         else:
-            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text+end)))
+            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text + end)))
 
     def scan_sentence(self, text):
         sentences = nltk.sent_tokenize(text)
@@ -310,10 +453,6 @@ class MyWindow(QWidget):
 
     def formint_output_text(self):
         self.text_browser.setText("")  # clean output
-
-        if self.bookmark == len(self.list_paragraph):
-            self.text_browser = self.out_marker2("***Конец***")
-            return
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
 
@@ -332,6 +471,8 @@ class MyWindow(QWidget):
         self.output_paragraph()
 
     def output_paragraph(self):
+        if self.bookmark==0:
+            self.out_marker2("BEGIN\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
 
@@ -350,14 +491,43 @@ class MyWindow(QWidget):
             else:
                 self.out(self.list_sentences_trans[i], end=" ")
 
+        if self.bookmark==len(self.list_paragraph) - 1:
+            self.out_marker2("\n\nTHE END")
+
         if self.switch_audio.isChecked():
             self.repeat()
+
+        self.hide_curren_page2()
+
+        self.save_settings()
+    def save_settings(self):
+        # Сохранение настроек
+
+        self.settings.setValue("bookmark", self.bookmark)
+        self.settings.setValue("count", self.count)
+        self.settings.setValue("path_to_book", self.path_to_book)
+        self.settings.setValue("fontSize", self.text_browser.font().pointSize())
+        self.settings.setValue("audio_enabled", self.switch_audio.isChecked())
+        self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
+        self.settings.setValue("view_current_page", self.switch_Hide_current_page.isChecked())
+        self.settings.setValue("view_all_pages", self.switch_Hide_all_pages.isChecked())
+        self.settings.setValue("night_toggle", self.style().objectName())
+        self.settings.setValue("window_geometry_x", self.geometry().x())
+        self.settings.setValue("window_geometry_y", self.geometry().y())
+        self.settings.setValue("window_geometry_width", self.geometry().width())
+        self.settings.setValue("window_geometry_height", self.geometry().height())
+
+    def closeEvent(self, event):
+        # вызываем метод save() перед закрытием окна
+        self.save_settings()
+        # вызываем родительский метод closeEvent()
+        super().closeEvent(event)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    window = MyWindow("Cambias James. A Darkling Sea - royallib.com.txt")
+    window = MyWindow()
 
     window.show()
     sys.exit(app.exec_())
