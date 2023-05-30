@@ -258,18 +258,22 @@ class MyWindow(QWidget):
 
         self.formint_output_text()
 
-    def hide_curren_page2(self):
+    def hide_curren_and_all_page(self):
         if self.switch_Hide_current_page.isChecked():
             self.current_page_label.setText(str(self.bookmark))
             if self.switch_Hide_all_pages.isChecked():
+                self.all_pages_label.setText(str(len(self.list_paragraph) - 1))
                 self.input_field.setPlaceholderText("{} / {}".format(self.bookmark, len(self.list_paragraph) - 1))
             else:
+                self.all_pages_label.setText("?")
                 self.input_field.setPlaceholderText("{} / ?".format(self.bookmark))
         else:
             self.current_page_label.setText(("?"))
             if self.switch_Hide_all_pages.isChecked():
+                self.all_pages_label.setText(str(len(self.list_paragraph) - 1))
                 self.input_field.setPlaceholderText("? / {}".format(len(self.list_paragraph) - 1))
             else:
+                self.all_pages_label.setText("?")
                 self.input_field.setPlaceholderText("? / ?")
 
     def hide_curren_page(self, state):
@@ -498,7 +502,7 @@ class MyWindow(QWidget):
         if self.switch_audio.isChecked():
             self.repeat()
 
-        self.hide_curren_page2()
+        self.hide_curren_and_all_page()
 
         self.save_settings()
     def save_settings(self):
