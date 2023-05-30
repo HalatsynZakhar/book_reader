@@ -1,5 +1,32 @@
-This program is used to practice reading in a foreign language.
-It takes a text file as input (in this example, it reads a book written in English) and splits it into individual paragraphs. 
-It also takes a 'bookmark' file which contains the index of the last paragraph the user read. It has the functionality to translate the English paragraphs into another language (in this example, Russian) and display them side-by-side. 
-Each sentence is highlighted in the text so that the user can read one sentence in English and the corresponding one in the other language. 
-When the user has finished reading the paragraph, hitting enter saves the bookmark and moves to the next paragraph.
+Reader for learning English.
+
+Input data: English_book.txt.
+
+Displays text with parallel translation paragraph by paragraph on one page. Each sentence is highlighted while reading for easier reading.
+
+Settings:
+* voice sentences at 2 different speeds
+* dark theme and light theme
+* display current page and progress (optional)
+* document navigation
+* selection of any .txt on the computer
+
+This reader saves progress and all settings when restarting:
+* current book
+* current offer
+* current page
+* voice settings
+* window position and size
+* interface color
+
+The programming language used was Pothon.
+
+The following libraries were used in this code:
+
+* html - to convert HTML code to text.
+* sys - to access system functions and variables.
+* nltk - Natural Language Toolkit (natural language processing toolkit), i.e. library for text analysis in natural language.
+* googletrans - to translate text into another language via Google Translate.
+* gtts - for text-based speech synthesis.
+* pygame - for playing sound files and music.
+* PyQt5 - for creating a GUI application.
