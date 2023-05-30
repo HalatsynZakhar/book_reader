@@ -6,11 +6,11 @@ import re
 
 import nltk as nltk
 import pygame
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QEvent
 
-from PyQt5.QtGui import QFont, QColor, QPalette
+from PyQt5.QtGui import QFont, QColor, QPalette, QTextOption
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser, QPushButton, QLabel, \
-    QSpinBox, QLineEdit, QCheckBox
+    QSpinBox, QLineEdit, QCheckBox, QTextEdit
 from googletrans import Translator
 from gtts import gTTS
 
@@ -24,21 +24,24 @@ class MyWindow(QWidget):
 
         # создаем textBrowser и добавляем его в вертикальный лейаут
         self.text_browser = QTextBrowser()
-        self.text_browser.setWordWrapMode(False)
         main_layout.addWidget(self.text_browser)
 
         # создаем горизонтальный лейаут
         horizontal_layout = QHBoxLayout()
 
+        # создаем маленький вертикальный лейаут
+        prev_buttons_layout = QVBoxLayout()
+        horizontal_layout.addLayout(prev_buttons_layout)
+
         # создаем кнопку "prev prev" и добавляем ее в горизонтальный лейаут
         prev_prev_button = QPushButton("prev paragraph")
         prev_prev_button.setShortcut("Ctrl+Left")
-        horizontal_layout.addWidget(prev_prev_button)
+        prev_buttons_layout.addWidget(prev_prev_button)
 
         # создаем кнопку "previous" и добавляем ее в горизонтальный лейаут
         prev_button = QPushButton("previous")
         prev_button.setShortcut("Left")
-        horizontal_layout.addWidget(prev_button)
+        prev_buttons_layout.addWidget(prev_button)
 
         # создаем label "Font size" и добавляем его в горизонтальный лейаут
         font_size_label = QLabel("Font size")
@@ -49,9 +52,22 @@ class MyWindow(QWidget):
         self.spin_box.setValue(8)
         horizontal_layout.addWidget(self.spin_box)
 
-        switch = QCheckBox("Audio", self)
-        horizontal_layout.addWidget(switch)
-        switch.toggle()
+        # создаем маленький вертикальный лейаут для аудио
+        audio_setting_layout = QVBoxLayout()
+        horizontal_layout.addLayout(audio_setting_layout)
+
+        # создаем кнопку "Repeat" и добавляем ее в вертикальний аудио лейаут
+        repeat_button = QPushButton("Repeat")
+        audio_setting_layout.addWidget(repeat_button)
+
+
+        self.switch_audio = QCheckBox("Audio", self)
+        audio_setting_layout.addWidget(self.switch_audio)
+        #self.switch_audio.toggle()
+
+        self.switch_audio_slow = QCheckBox("Slow", self)
+        audio_setting_layout.addWidget(self.switch_audio_slow)
+        self.switch_audio_slow.toggle()
 
 
         # создаем кнопку "go to page" и добавляем ее в горизонтальный лейаут
@@ -62,35 +78,49 @@ class MyWindow(QWidget):
         self.input_field = QLineEdit()
         horizontal_layout.addWidget(self.input_field)
 
-        # создаем кнопку "view current page" и добавляем ее в горизонтальный лейаут
-        view_current_page_button = QPushButton("view current page")
-        horizontal_layout.addWidget(view_current_page_button)
+        # создаем маленький вертикальный лейаут
+        pages_layout = QVBoxLayout()
+        horizontal_layout.addLayout(pages_layout)
+
+
+        switch_Hide_info = QCheckBox("View current page", self)
+        pages_layout.addWidget(switch_Hide_info)
+
+        switch_Hide_info = QCheckBox("View all pages", self)
+        pages_layout.addWidget(switch_Hide_info)
+
+        # создаем маленький вертикальный лейаут
+        label_layout = QVBoxLayout()
+        horizontal_layout.addLayout(label_layout)
 
         # создаем label "???" и добавляем его в горизонтальный лейаут
         label1 = QLabel("???")
-        horizontal_layout.addWidget(label1)
-
-        # создаем кнопку "view pages" и добавляем ее в горизонтальный лейаут
-        view_pages_button = QPushButton("view pages")
-        horizontal_layout.addWidget(view_pages_button)
+        label_layout.addWidget(label1)
 
         # создаем label "???" и добавляем его в горизонтальный лейаут
         label2 = QLabel("???")
-        horizontal_layout.addWidget(label2)
+        label_layout.addWidget(label2)
+
+
 
         # создаем кнопку и добавляем ее в вертикальный лейаут
         toggle_button = QPushButton("Change toggle")
         horizontal_layout.addWidget(toggle_button)
 
+        # создаем маленький вертикальный лейаут
+        # создаем маленький вертикальный лейаут для аудио
+        next_next_layout = QVBoxLayout()
+        horizontal_layout.addLayout(next_next_layout)
+
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         next_button = QPushButton("next sentence")
         next_button.setShortcut("Right")
-        horizontal_layout.addWidget(next_button)
+        next_next_layout.addWidget(next_button)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         next_next_button = QPushButton("next paragraph")
         next_next_button.setShortcut("Ctrl+Right")
-        horizontal_layout.addWidget(next_next_button)
+        next_next_layout.addWidget(next_next_button)
 
         # добавляем горизонтальный лейаут в вертикальный лейаут
         main_layout.addLayout(horizontal_layout)
@@ -107,8 +137,6 @@ class MyWindow(QWidget):
         with open('bookmark.txt', encoding='windows-1251') as f:
             self.bookmark = int(f.read())
         self.count = 0
-        self.tts_play = True
-        pygame.init()
 
         # связываем кнопку со слотом
         toggle_button.clicked.connect(self.toggle_theme)
@@ -116,24 +144,37 @@ class MyWindow(QWidget):
         next_next_button.clicked.connect(self.next_next_button)
         prev_button.clicked.connect(self.prev_button)
         prev_prev_button.clicked.connect(self.prev_prev_button)
-        self.spin_box.valueChanged.connect(self.changeFont)
-        switch.stateChanged.connect(self.audio_switch)
 
-        if self.tts_play:
-            pygame.quit()
-
+        self.switch_audio.stateChanged.connect(self.audio_switch)
         self.formint_output_text()
+        repeat_button.clicked.connect(self.repeat)
+        # Соединение событий прокрутки колесика мыши и изменения размера шрифта в text_browser
+        self.spin_box.valueChanged.connect(self.changeFont)
 
-        QApplication.setStyle("windows")
         self.toggle_theme()
+
+    def event(self, event):
+        # Проверяем, что произошло событие колеса мыши с зажатой клавишей Ctrl
+        if event.type() == QEvent.Wheel and event.modifiers() == Qt.ControlModifier:
+            font = self.text_browser.font()
+            font_size = font.pointSize()
+            self.spin_box.setValue(font_size)  # Устанавливаем новое значение для spinBox
+
+        return super().event(event)
+    def repeat(self):
+        pygame.quit()
+        pygame.init()
+        tts = gTTS(self.list_sentences[self.count], slow=self.switch_audio_slow.isChecked())
+        tts.save('sentence.mp3')
+        song = pygame.mixer.Sound('sentence.mp3')
+        song.play()
 
     def audio_switch(self, state):
         if state == Qt.Checked:
-            # Включить аудио
-            self.tts_play = True
+            self.repeat()
         else:
             # Выключить аудио
-            self.tts_play = False
+            pygame.quit()
 
     def google_Translate(self, text):
         translator = Translator()
@@ -182,7 +223,6 @@ class MyWindow(QWidget):
 
     def toggle_theme(self):
         # определяем текущую тему
-        print(self.style().objectName())
         if self.style().objectName() == "fusion":
             # переключаем на светлую тему
             QApplication.setStyle("windows")
@@ -220,11 +260,20 @@ class MyWindow(QWidget):
             palette.setColor(palette.HighlightedText, Qt.black)
             QApplication.setPalette(palette)
 
+        self.text_browser.setText("")  # clean output
+        self.output_paragraph()
+
+    def changeFont_update(self, event):
+        if event.modifiers() == Qt.ControlModifier:  # Проверяем, что зажата клавиша Ctrl
+            font = self.text_browser.font()
+            font_size = font.pointSize()
+            self.spin_box.setValue(font_size)  # Устанавливаем новое значение для spinBox
+
     def changeFont(self):
-        num = self.spin_box.value()
-        font = QFont()
-        font.setPointSize(num)
-        self.text_browser.setFont(font)
+        font_size = self.spin_box.value()  # Получаем текущее значение spinBox
+        font = self.text_browser.font()  # Получаем текущий шрифт text_browser
+        font.setPointSize(font_size)  # Устанавливаем новый размер шрифта
+        self.text_browser.setFont(font)  # Устанавливаем новый шрифт для text_browser
 
     def filter_text(self, text):
         # заменяем спецсимволы на их HTML-эквиваленты
@@ -233,29 +282,27 @@ class MyWindow(QWidget):
         text = text.replace('\n', '<br>')
         # заменяем символы табуляции на тег <pre>
         text = text.replace('\t', '<pre>')
-        # экранируем пробельные символы
-        text = text.replace(' ', '&nbsp;')
+        # заменяем пробелы в конце предложений
+
         return text
 
-    def out_red(self, text):
-        self.text_browser.insertHtml('<span style="color: #ff0000;">{}</span>'.format(self.filter_text(text)))
+    def out_red(self, text, end="\n"):
+        self.text_browser.insertHtml('<span style="color: #ff0000;">{}</span>'.format(self.filter_text(text+end)))
 
-    def out(self, text):
-        self.text_browser.insertHtml(self.filter_text(text))
+    def out(self, text, end="\n"):
+        self.text_browser.insertHtml(self.filter_text(text + end))
 
-    def out_marker1(self, text):
-        print(text, end="")
+    def out_marker1(self, text, end="\n"):
         if self.style().objectName() == "fusion":
-            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text)))
+            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text+end)))
         else:
-            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text)))
+            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text+end)))
 
-    def out_marker2(self, text):
-        print(text, end="")
+    def out_marker2(self, text, end="\n"):
         if self.style().objectName() == "fusion":
-            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text)))
+            self.text_browser.insertHtml('<span style="color: #0000ff;">{}</span>'.format(self.filter_text(text+end)))
         else:
-            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text)))
+            self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text+end)))
 
     def scan_sentence(self, text):
         sentences = nltk.sent_tokenize(text)
@@ -263,9 +310,6 @@ class MyWindow(QWidget):
 
     def formint_output_text(self):
         self.text_browser.setText("")  # clean output
-
-        if self.tts_play:
-            pygame.quit()
 
         if self.bookmark == len(self.list_paragraph):
             self.text_browser = self.out_marker2("***Конец***")
@@ -277,7 +321,7 @@ class MyWindow(QWidget):
             """Обработка исключения, когда вначале лишний перевод строки
             Указывает на смену темы"""
             self.currentParagraph = self.currentParagraph[1::]
-            self.out_marker2("***\n")
+            self.out_marker2("***")
 
         self.list_sentences = self.scan_sentence(self.currentParagraph)
 
@@ -293,32 +337,26 @@ class MyWindow(QWidget):
 
         for i in range(len(self.list_sentences)):
             if self.count == i:
-                self.out_marker1(self.list_sentences[i])
+                self.out_marker1(self.list_sentences[i], end=" ")
             else:
-                self.out(self.list_sentences[i])
+                self.out(self.list_sentences[i], end=" ")
 
-        self.out("\n")
-        self.out("\n")
+        self.out("")
+        self.out("")
 
         for i in range(len(self.list_sentences_trans)):
             if self.count == i:
-                self.out_marker1(self.list_sentences_trans[i])
+                self.out_marker1(self.list_sentences_trans[i], end=" ")
             else:
-                self.out(self.list_sentences_trans[i])
+                self.out(self.list_sentences_trans[i], end=" ")
 
-        if self.tts_play:
-            pygame.init()
-        if self.tts_play:
-            tts = gTTS(self.list_sentences[self.count], slow=True)
-            tts.save('sentence.mp3')
-            song = pygame.mixer.Sound('sentence.mp3')
-            song.play()
+        if self.switch_audio.isChecked():
+            self.repeat()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    app.setStyle('fusion')  # задаем стиль приложения
     window = MyWindow("Cambias James. A Darkling Sea - royallib.com.txt")
 
     window.show()
