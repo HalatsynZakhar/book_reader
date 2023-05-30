@@ -70,8 +70,9 @@ class MyWindow(QWidget):
         horizontal_layout.addLayout(audio_setting_layout)
 
         # создаем кнопку "Repeat" и добавляем ее в вертикальний аудио лейаут
-        repeat_button = QPushButton("Repeat")
+        repeat_button = QPushButton("Repeat (R)")
         audio_setting_layout.addWidget(repeat_button)
+        repeat_button.setShortcut("R")
 
         self.switch_audio = QCheckBox("Audio (V)", self)
         audio_setting_layout.addWidget(self.switch_audio)
