@@ -1,6 +1,9 @@
 import html
 import sys
 
+import requests
+from bs4 import BeautifulSoup
+
 import nltk
 from googletrans import Translator
 from gtts import gTTS
@@ -22,7 +25,10 @@ class MyWindow(QWidget):
         self.create_GUI()
 
         # чтение файла (указан путь к примеру файлу txt) и генерация страницы далее
-        self.read_txt()
+        if self.active_mode == "book":
+            self.read_txt()
+        elif self.active_mode == "song":
+            self.read_song()
 
         # устанавливаем ночную тему,если это соотвтетсвует настройке
         if self.night_toggle == "fusion":
@@ -42,6 +48,7 @@ class MyWindow(QWidget):
         # создаем горизонтальный лейаут
         horizontal_layout = QHBoxLayout()
 
+
         # создаем маленький вертикальный лейаут
         prev_buttons_layout = QVBoxLayout()
         horizontal_layout.addLayout(prev_buttons_layout)
@@ -56,18 +63,26 @@ class MyWindow(QWidget):
         prev_button.setShortcut("Left")
         prev_buttons_layout.addWidget(prev_button)
 
+
+
+
+
+
         # создаем label "Font size" и добавляем его в горизонтальный лейаут
         font_size_label = QLabel("Font size")
         horizontal_layout.addWidget(font_size_label)
+        font_size_label.setAlignment(QtCore.Qt.AlignCenter)
 
         # создаем spinBox и добавляем его в горизонтальный лейаут
         self.spin_box = QSpinBox()
         self.spin_box.setValue(self.text_browser.font().pointSize())
         horizontal_layout.addWidget(self.spin_box)
 
+
         # создаем маленький вертикальный лейаут для аудио
         audio_setting_layout = QVBoxLayout()
         horizontal_layout.addLayout(audio_setting_layout)
+
 
         # создаем кнопку "Repeat" и добавляем ее в вертикальний аудио лейаут
         repeat_button = QPushButton("Repeat (R)")
@@ -89,23 +104,26 @@ class MyWindow(QWidget):
         go_to_page_layout = QVBoxLayout()
         horizontal_layout.addLayout(go_to_page_layout)
 
+
         # создаем кнопку "go to page" и добавляем ее в горизонтальный лейаут
         self.go_to_page_label = QLabel("Go to page:")
         go_to_page_layout.addWidget(self.go_to_page_label)
-        self.go_to_page_label.setMinimumWidth(60)
+        self.go_to_page_label.setMinimumWidth(80)
         self.go_to_page_label.setMaximumWidth(100)
         self.go_to_page_label.setAlignment(Qt.AlignCenter)
 
         # создаем input поле и добавляем его в горизонтальный лейаут
         self.input_field = QLineEdit()
         go_to_page_layout.addWidget(self.input_field)
-        self.input_field.setMinimumWidth(40)
+        self.input_field.setMinimumWidth(80)
         self.input_field.setMaximumWidth(100)
         self.input_field.setAlignment(QtCore.Qt.AlignCenter)
+
 
         # создаем маленький вертикальный лейаут
         pages_layout = QVBoxLayout()
         horizontal_layout.addLayout(pages_layout)
+
 
         self.switch_Hide_current_page = QCheckBox("View current page", self)
         pages_layout.addWidget(self.switch_Hide_current_page)
@@ -120,6 +138,7 @@ class MyWindow(QWidget):
         # создаем маленький вертикальный лейаут
         label_layout = QVBoxLayout()
         horizontal_layout.addLayout(label_layout)
+
 
         # создаем label "???" и добавляем его в горизонтальный лейаут
         self.current_page_label = QLabel("?")
@@ -138,27 +157,49 @@ class MyWindow(QWidget):
         horizontal_layout.addWidget(toggle_button)
 
         # создаем маленький вертикальный лейаут
-        # создаем маленький вертикальный лейаут для аудио
         next_next_layout = QVBoxLayout()
         horizontal_layout.addLayout(next_next_layout)
-
-        # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
-        next_button = QPushButton("next sentence (Right)")
-        next_button.setShortcut("Right")
-        next_next_layout.addWidget(next_button)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         next_next_button = QPushButton("next paragraph (Ctrl+Right)")
         next_next_button.setShortcut("Ctrl+Right")
         next_next_layout.addWidget(next_next_button)
 
+        # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
+        next_button = QPushButton("next sentence (Right)")
+        next_button.setShortcut("Right")
+        next_next_layout.addWidget(next_button)
+
+
+
         # добавляем горизонтальный лейаут в вертикальный лейаут
         main_layout.addLayout(horizontal_layout)
 
+        # создаем маленький горизонтальный лейаут
+        path_to_file_layout = QHBoxLayout()
+        main_layout.addLayout(path_to_file_layout)
+
+        # создаем label
+        path_to_file_label = QLabel("Path to file: ")
+        path_to_file_layout.addWidget(path_to_file_label)
+
         # создаем input поле и добавляем его в горизонтальный лейаут
         self.input_path_to_file = QLineEdit()
-        main_layout.addWidget(self.input_path_to_file)
+        path_to_file_layout.addWidget(self.input_path_to_file)
         self.input_path_to_file.setAlignment(QtCore.Qt.AlignCenter)
+
+        # создаем маленький горизонтальный лейаут
+        find_song_layout = QHBoxLayout()
+        main_layout.addLayout(find_song_layout)
+
+        # создаем label
+        find_song_label = QLabel("Find song:    ")
+        find_song_layout.addWidget(find_song_label)
+
+        # создаем input поле и добавляем его в горизонтальный лейаут
+        self.input_find_songs = QLineEdit()
+        find_song_layout.addWidget(self.input_find_songs)
+        self.input_find_songs.setAlignment(QtCore.Qt.AlignCenter)
 
         # устанавливаем вертикальный лейаут в качестве главного лейаута окна
         self.setLayout(main_layout)
@@ -176,19 +217,83 @@ class MyWindow(QWidget):
         self.spin_box.valueChanged.connect(self.changeFont)
         self.switch_Hide_all_pages.stateChanged.connect(self.hide_all_pages)
         self.switch_Hide_current_page.stateChanged.connect(self.hide_curren_page)
+        self.spin_box.setMaximumWidth(40)
+
         # устанавливаем обработчик событий для поля input_field
         self.input_field.editingFinished.connect(self.handle_editing_finished)
         self.input_path_to_file.editingFinished.connect(self.handle_editing_path)
+        self.input_find_songs.editingFinished.connect(self.handle_editing_song)
+
 
         self.input_path_to_file.setPlaceholderText("{}".format(self.path_to_book))
+        self.input_find_songs.setPlaceholderText("{}".format(self.find_song))
+
+        if self.active_mode=="book":
+            self.setWindowTitle("{}".format(self.path_to_book))
+        if self.active_mode=="song":
+            self.setWindowTitle("{}".format(self.find_song))
+
+    def handle_editing_song(self):
+        self.active_mode = "song"
+
+        if self.find_song != self.input_find_songs.text() and self.input_find_songs.text() != "":
+            self.count_song = 0
+            self.bookmark_song = 0
+            self.find_song = self.input_find_songs.text()
+        self.input_find_songs.setPlaceholderText("{}".format(self.find_song))
+        self.setWindowTitle("{}".format(self.find_song))
+
+
+        self.input_find_songs.clearFocus()
+        self.input_find_songs.clear()
+
+        self.read_song()
+
+    def read_song(self):
+        self.text = ""
+        try:
+            lyrict_title = self.find_song.replace(" ", "-").lower()
+
+            # URL страницы с текстом песни
+            url = 'https://muztext.com/lyrics/{}'.format(lyrict_title)
+
+            # Отправляем GET-запрос на сервер
+            response = requests.get(url)
+
+            # Парсим HTML-страницу с помощью BeautifulSoup
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Находим элемент с текстом песни
+            lyrics = soup.find('table', {'class': 'orig'})
+
+            # Выводим текст песни
+            self.text = lyrics.text
+        except:
+            pass
+        self.count = self.count_song
+        self.bookmark = self.bookmark_song
+
+        if self.text == "":
+            self.text += "The song was not found. Try again. Input format: artist title. Example: Dynazty Waterfall"
+            self.count = 0
+            self.bookmark = 0
+
+        temp_list = self.text.split("(оригинал)")
+        self.list_paragraph = temp_list[-1].split("\n")
+        self.list_paragraph = [x for x in self.list_paragraph if x]
+        self.formint_output_text()
 
     def download_settings(self):
         self.settings = QSettings("halatsyn_zakhar", "book_reader")
 
         # Загрузка настроек
-        self.bookmark = self.settings.value("bookmark", 0)
-        self.count = self.settings.value("count", 0)
+        self.active_mode = self.settings.value("active_mode", "book")
+        self.bookmark_book = self.settings.value("bookmark_book", 0)
+        self.count_book = self.settings.value("count_book", 0)
+        self.bookmark_song = self.settings.value("bookmark_song", 0)
+        self.count_song = self.settings.value("count_song", 0)
         self.path_to_book = self.settings.value("path_to_book", "")
+        self.find_song = self.settings.value("find_song", "")
         self.fontSize = self.settings.value("fontSize", 20)
         self.audio_enabled = self.settings.value("audio_enabled", False)
         self.slow_reading = self.settings.value("slow_reading", False)
@@ -201,8 +306,11 @@ class MyWindow(QWidget):
         self.window_geometry_height = self.settings.value("window_geometry_height", 600)
 
         # Преобразование типов данных
-        self.bookmark = int(self.bookmark)
-        self.count = int(self.count)
+        self.bookmark_book = int(self.bookmark_book)
+        self.count_book = int(self.count_book)
+        self.bookmark_song = int(self.bookmark_song)
+        self.count_song = int(self.count_song)
+
         self.fontSize = int(self.fontSize)
         self.window_geometry_x = int(self.window_geometry_x)
         self.window_geometry_y = int(self.window_geometry_y)
@@ -224,9 +332,15 @@ class MyWindow(QWidget):
                 self.text = f.read()
         except:
             pass
+
+        self.bookmark = self.bookmark_book
+        self.count = self.count_book
+
         if self.text == "":
-            self.text += "The path to the file is missing, or the file is invalid. Please enter a valid relative or absolute path " \
-            "in the input below"
+            self.text += r"The path to the file is missing, or the file is invalid. Please enter a valid relative or " \
+                         r"absolute path in the input below. Exemples: Cambias James. A Darkling Sea - " \
+                         r"royallib.com.txt or C:\Users\halat\PycharmProjects\book_reader\Cambias James. A Darkling " \
+                         r"Sea - royallib.com.txt"
             self.count = 0
             self.bookmark = 0
 
@@ -234,14 +348,16 @@ class MyWindow(QWidget):
         self.list_paragraph = [x for x in self.list_paragraph if x]
         self.formint_output_text()
 
-        # устанавливаем валидатор для ограничения ввода только целых чисел
-        validator = QIntValidator(0, len(self.list_paragraph) - 1, self)
-        self.input_field.setValidator(validator)
-
-
     def handle_editing_path(self):
-        self.path_to_book = self.input_path_to_file.text()
+        self.active_mode = "book"
+
+        if self.path_to_book != self.input_path_to_file.text() and self.input_path_to_file.text() != "":
+            self.count_book = 0
+            self.bookmark_book = 0
+            self.path_to_book = self.input_path_to_file.text()
+
         self.input_path_to_file.setPlaceholderText("{}".format(self.path_to_book))
+        self.setWindowTitle("{}".format(self.path_to_book))
 
         self.input_path_to_file.clearFocus()
         self.input_path_to_file.clear()
@@ -255,7 +371,6 @@ class MyWindow(QWidget):
 
         self.input_field.clear()
         self.input_field.clearFocus()
-
 
         self.formint_output_text()
 
@@ -477,7 +592,7 @@ class MyWindow(QWidget):
         self.output_paragraph()
 
     def output_paragraph(self):
-        if self.bookmark==0:
+        if self.bookmark == 0:
             self.out_marker2("BEGIN\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
@@ -497,7 +612,7 @@ class MyWindow(QWidget):
             else:
                 self.out(self.list_sentences_trans[i], end=" ")
 
-        if self.bookmark==len(self.list_paragraph) - 1:
+        if self.bookmark == len(self.list_paragraph) - 1:
             self.out_marker2("\n\nTHE END")
 
         if self.switch_audio.isChecked():
@@ -505,13 +620,27 @@ class MyWindow(QWidget):
 
         self.hide_curren_and_all_page()
 
+        if self.active_mode == "book":
+            self.count_book = self.count
+            self.bookmark_book = self.bookmark
+        elif self.active_mode == "song":
+            self.count_song = self.count
+            self.bookmark_song = self.bookmark
         self.save_settings()
+
+        # устанавливаем валидатор для ограничения ввода только целых чисел
+        validator = QIntValidator(0, len(self.list_paragraph) - 1, self)
+        self.input_field.setValidator(validator)
+
     def save_settings(self):
         # Сохранение настроек
-
-        self.settings.setValue("bookmark", self.bookmark)
-        self.settings.setValue("count", self.count)
+        self.settings.setValue("active_mode", self.active_mode)
+        self.settings.setValue("bookmark_book", self.bookmark_book)
+        self.settings.setValue("count_book", self.count_book)
+        self.settings.setValue("bookmark_song", self.bookmark_song)
+        self.settings.setValue("count_song", self.count_song)
         self.settings.setValue("path_to_book", self.path_to_book)
+        self.settings.setValue("find_song", self.find_song)
         self.settings.setValue("fontSize", self.text_browser.font().pointSize())
         self.settings.setValue("audio_enabled", self.switch_audio.isChecked())
         self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
