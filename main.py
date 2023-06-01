@@ -1,4 +1,5 @@
 import html
+import os
 import sys
 
 import requests
@@ -13,7 +14,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QSettings, QEvent
 from PyQt5.QtGui import QPalette, QColor, QIntValidator
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser, QPushButton, QLabel, \
-    QSpinBox, QLineEdit, QCheckBox
+    QSpinBox, QLineEdit, QCheckBox, QFileDialog
 
 
 class MyWindow(QWidget):
@@ -174,6 +175,11 @@ class MyWindow(QWidget):
         path_to_file_layout.addWidget(self.input_path_to_file)
         self.input_path_to_file.setAlignment(QtCore.Qt.AlignCenter)
 
+        # создаем кнопку
+        button_navigator = QPushButton("Open (O)")
+        button_navigator.setShortcut("O")
+        path_to_file_layout.addWidget(button_navigator)
+
         # создаем маленький горизонтальный лейаут
         find_song_layout = QHBoxLayout()
         main_layout.addLayout(find_song_layout)
@@ -210,6 +216,8 @@ class MyWindow(QWidget):
         self.input_path_to_file.editingFinished.connect(self.handle_editing_path)
         self.input_find_songs.editingFinished.connect(self.handle_editing_song)
 
+        button_navigator.clicked.connect(self.select_file)
+
         self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
         self.input_find_songs.setPlaceholderText("{}".format(self.last_song))
 
@@ -235,6 +243,17 @@ class MyWindow(QWidget):
         self.input_find_songs.clearFocus()
 
         self.read_song()
+
+    def select_file(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open File", "", ".txt file (*.txt)",
+                                                  options=options)
+        if fileName:
+            self.input_path_to_file.setText(fileName)
+            self.handle_editing_path()
+
+
 
     def read_song(self):
         self.text = ""
@@ -332,15 +351,17 @@ class MyWindow(QWidget):
 
     def handle_editing_path(self):
         self.active_mode = "book"
-        if self.input_path_to_file.text() != "":
-            if self.input_path_to_file.text() in self.bookmarks_book:
+        path = self.input_path_to_file.text()
+        absolute_path = os.path.abspath(path)
+        if absolute_path != "":
+            if absolute_path in self.bookmarks_book:
                 """Книга существует, загрузить существующие данные"""
-                self.bookmark, self.count = self.bookmarks_book[self.input_path_to_file.text()]
+                self.bookmark, self.count = self.bookmarks_book[absolute_path]
             else:
                 """Книга новая"""
                 self.bookmark = 0
                 self.count = 0
-            self.last_book = self.input_path_to_file.text()
+            self.last_book = absolute_path
 
         self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
         self.setWindowTitle("{}".format(self.last_book))
