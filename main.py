@@ -48,7 +48,6 @@ class MyWindow(QWidget):
         # создаем горизонтальный лейаут
         horizontal_layout = QHBoxLayout()
 
-
         # создаем маленький вертикальный лейаут
         prev_buttons_layout = QVBoxLayout()
         horizontal_layout.addLayout(prev_buttons_layout)
@@ -63,11 +62,6 @@ class MyWindow(QWidget):
         prev_button.setShortcut("Left")
         prev_buttons_layout.addWidget(prev_button)
 
-
-
-
-
-
         # создаем label "Font size" и добавляем его в горизонтальный лейаут
         font_size_label = QLabel("Font size")
         horizontal_layout.addWidget(font_size_label)
@@ -78,11 +72,9 @@ class MyWindow(QWidget):
         self.spin_box.setValue(self.text_browser.font().pointSize())
         horizontal_layout.addWidget(self.spin_box)
 
-
         # создаем маленький вертикальный лейаут для аудио
         audio_setting_layout = QVBoxLayout()
         horizontal_layout.addLayout(audio_setting_layout)
-
 
         # создаем кнопку "Repeat" и добавляем ее в вертикальний аудио лейаут
         repeat_button = QPushButton("Repeat (R)")
@@ -104,7 +96,6 @@ class MyWindow(QWidget):
         go_to_page_layout = QVBoxLayout()
         horizontal_layout.addLayout(go_to_page_layout)
 
-
         # создаем кнопку "go to page" и добавляем ее в горизонтальный лейаут
         self.go_to_page_label = QLabel("Go to page:")
         go_to_page_layout.addWidget(self.go_to_page_label)
@@ -119,11 +110,9 @@ class MyWindow(QWidget):
         self.input_field.setMaximumWidth(100)
         self.input_field.setAlignment(QtCore.Qt.AlignCenter)
 
-
         # создаем маленький вертикальный лейаут
         pages_layout = QVBoxLayout()
         horizontal_layout.addLayout(pages_layout)
-
 
         self.switch_Hide_current_page = QCheckBox("View current page", self)
         pages_layout.addWidget(self.switch_Hide_current_page)
@@ -138,7 +127,6 @@ class MyWindow(QWidget):
         # создаем маленький вертикальный лейаут
         label_layout = QVBoxLayout()
         horizontal_layout.addLayout(label_layout)
-
 
         # создаем label "???" и добавляем его в горизонтальный лейаут
         self.current_page_label = QLabel("?")
@@ -169,8 +157,6 @@ class MyWindow(QWidget):
         next_button = QPushButton("next sentence (Right)")
         next_button.setShortcut("Right")
         next_next_layout.addWidget(next_button)
-
-
 
         # добавляем горизонтальный лейаут в вертикальный лейаут
         main_layout.addLayout(horizontal_layout)
@@ -224,35 +210,36 @@ class MyWindow(QWidget):
         self.input_path_to_file.editingFinished.connect(self.handle_editing_path)
         self.input_find_songs.editingFinished.connect(self.handle_editing_song)
 
+        self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
+        self.input_find_songs.setPlaceholderText("{}".format(self.last_song))
 
-        self.input_path_to_file.setPlaceholderText("{}".format(self.path_to_book))
-        self.input_find_songs.setPlaceholderText("{}".format(self.find_song))
-
-        if self.active_mode=="book":
-            self.setWindowTitle("{}".format(self.path_to_book))
-        if self.active_mode=="song":
-            self.setWindowTitle("{}".format(self.find_song))
+        if self.active_mode == "book":
+            self.setWindowTitle("{}".format(self.last_book))
+        if self.active_mode == "song":
+            self.setWindowTitle("{}".format(self.last_song))
 
     def handle_editing_song(self):
         self.active_mode = "song"
+        find_text_filtered = self.input_find_songs.text().replace(" ", "-").lower()
+        if find_text_filtered != "":
+            if find_text_filtered in self.bookmarks_song:
+                self.bookmark, self.count = self.bookmarks_song[find_text_filtered]
+            else:
+                self.bookmark = 0
+                self.count = 0
+            self.last_song = find_text_filtered
 
-        if self.find_song != self.input_find_songs.text() and self.input_find_songs.text() != "":
-            self.count_song = 0
-            self.bookmark_song = 0
-            self.find_song = self.input_find_songs.text()
-        self.input_find_songs.setPlaceholderText("{}".format(self.find_song))
-        self.setWindowTitle("{}".format(self.find_song))
-
+        self.input_find_songs.setPlaceholderText("{}".format(self.last_song))
+        self.setWindowTitle("{}".format(self.last_song))
 
         self.input_find_songs.clearFocus()
-        self.input_find_songs.clear()
 
         self.read_song()
 
     def read_song(self):
         self.text = ""
         try:
-            lyrict_title = self.find_song.replace(" ", "-").lower()
+            lyrict_title = self.last_song
 
             # URL страницы с текстом песни
             url = 'https://muztext.com/lyrics/{}'.format(lyrict_title)
@@ -270,13 +257,15 @@ class MyWindow(QWidget):
             self.text = lyrics.text
         except:
             pass
-        self.count = self.count_song
-        self.bookmark = self.bookmark_song
+
+        self.bookmark, self.count = self.bookmarks_song.get(self.last_song, (0, 0))
 
         if self.text == "":
             self.text += "The song was not found. Try again. Input format: artist title. Example: Dynazty Waterfall"
             self.count = 0
             self.bookmark = 0
+        else:
+            self.input_find_songs.clear()
 
         temp_list = self.text.split("(оригинал)")
         self.list_paragraph = temp_list[-1].split("\n")
@@ -287,13 +276,11 @@ class MyWindow(QWidget):
         self.settings = QSettings("halatsyn_zakhar", "book_reader")
 
         # Загрузка настроек
+        self.bookmarks_book = self.settings.value("bookmarks_book", {})
+        self.bookmarks_song = self.settings.value("bookmarks_song", {})
         self.active_mode = self.settings.value("active_mode", "book")
-        self.bookmark_book = self.settings.value("bookmark_book", 0)
-        self.count_book = self.settings.value("count_book", 0)
-        self.bookmark_song = self.settings.value("bookmark_song", 0)
-        self.count_song = self.settings.value("count_song", 0)
-        self.path_to_book = self.settings.value("path_to_book", "")
-        self.find_song = self.settings.value("find_song", "")
+        self.last_book = self.settings.value("last_book", "")
+        self.last_song = self.settings.value("last_song", "")
         self.fontSize = self.settings.value("fontSize", 20)
         self.audio_enabled = self.settings.value("audio_enabled", False)
         self.slow_reading = self.settings.value("slow_reading", False)
@@ -306,11 +293,6 @@ class MyWindow(QWidget):
         self.window_geometry_height = self.settings.value("window_geometry_height", 600)
 
         # Преобразование типов данных
-        self.bookmark_book = int(self.bookmark_book)
-        self.count_book = int(self.count_book)
-        self.bookmark_song = int(self.bookmark_song)
-        self.count_song = int(self.count_song)
-
         self.fontSize = int(self.fontSize)
         self.window_geometry_x = int(self.window_geometry_x)
         self.window_geometry_y = int(self.window_geometry_y)
@@ -328,13 +310,12 @@ class MyWindow(QWidget):
     def read_txt(self):
         self.text = ""
         try:
-            with open(self.path_to_book, encoding='windows-1251') as f:
+            with open(self.last_book, encoding='windows-1251') as f:
                 self.text = f.read()
         except:
             pass
 
-        self.bookmark = self.bookmark_book
-        self.count = self.count_book
+        self.bookmark, self.count = self.bookmarks_book.get(self.last_book, (0, 0))
 
         if self.text == "":
             self.text += r"The path to the file is missing, or the file is invalid. Please enter a valid relative or " \
@@ -343,24 +324,28 @@ class MyWindow(QWidget):
                          r"Sea - royallib.com.txt"
             self.count = 0
             self.bookmark = 0
-
+        else:
+            self.input_path_to_file.clear()
         self.list_paragraph = self.text.split("\n\n")
         self.list_paragraph = [x for x in self.list_paragraph if x]
         self.formint_output_text()
 
     def handle_editing_path(self):
         self.active_mode = "book"
+        if self.input_path_to_file.text() != "":
+            if self.input_path_to_file.text() in self.bookmarks_book:
+                """Книга существует, загрузить существующие данные"""
+                self.bookmark, self.count = self.bookmarks_book[self.input_path_to_file.text()]
+            else:
+                """Книга новая"""
+                self.bookmark = 0
+                self.count = 0
+            self.last_book = self.input_path_to_file.text()
 
-        if self.path_to_book != self.input_path_to_file.text() and self.input_path_to_file.text() != "":
-            self.count_book = 0
-            self.bookmark_book = 0
-            self.path_to_book = self.input_path_to_file.text()
-
-        self.input_path_to_file.setPlaceholderText("{}".format(self.path_to_book))
-        self.setWindowTitle("{}".format(self.path_to_book))
+        self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
+        self.setWindowTitle("{}".format(self.last_book))
 
         self.input_path_to_file.clearFocus()
-        self.input_path_to_file.clear()
 
         self.read_txt()
 
@@ -369,8 +354,8 @@ class MyWindow(QWidget):
         self.count = 0
         self.bookmark = int(self.input_field.text())
 
-        self.input_field.clear()
         self.input_field.clearFocus()
+        self.input_field.clear()
 
         self.formint_output_text()
 
@@ -621,11 +606,9 @@ class MyWindow(QWidget):
         self.hide_curren_and_all_page()
 
         if self.active_mode == "book":
-            self.count_book = self.count
-            self.bookmark_book = self.bookmark
+            self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
         elif self.active_mode == "song":
-            self.count_song = self.count
-            self.bookmark_song = self.bookmark
+            self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
         self.save_settings()
 
         # устанавливаем валидатор для ограничения ввода только целых чисел
@@ -634,13 +617,12 @@ class MyWindow(QWidget):
 
     def save_settings(self):
         # Сохранение настроек
+
+        self.settings.setValue("bookmarks_book", self.bookmarks_book)
+        self.settings.setValue("bookmarks_song", self.bookmarks_song)
         self.settings.setValue("active_mode", self.active_mode)
-        self.settings.setValue("bookmark_book", self.bookmark_book)
-        self.settings.setValue("count_book", self.count_book)
-        self.settings.setValue("bookmark_song", self.bookmark_song)
-        self.settings.setValue("count_song", self.count_song)
-        self.settings.setValue("path_to_book", self.path_to_book)
-        self.settings.setValue("find_song", self.find_song)
+        self.settings.setValue("last_book", self.last_book)
+        self.settings.setValue("last_song", self.last_song)
         self.settings.setValue("fontSize", self.text_browser.font().pointSize())
         self.settings.setValue("audio_enabled", self.switch_audio.isChecked())
         self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
