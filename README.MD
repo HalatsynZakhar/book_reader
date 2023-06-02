@@ -49,6 +49,7 @@ Create virt env
 * Download file and add to directory name
 * Install the necessary packages for work (pip install requests beautifulsoup4 nltk googletrans==3.1.0a0 gtts pygame PyQt5 lxml)
 * Run the program: (python main.py)
+
 For the next run:
 * Go to directory (cd name)
 * environment activation (Scripts\activate.bat)
