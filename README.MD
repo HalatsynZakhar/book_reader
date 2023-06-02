@@ -1,6 +1,6 @@
-Reader for learning English.
+Reader for learning English (or any other language)
 
-Input data: English_book.txt or Music title
+Input data: book.txt (book.fb2) or Music title
 
 Displays text with parallel translation paragraph by paragraph on one page. Each sentence is highlighted while reading for easier reading.
 
@@ -26,10 +26,16 @@ Python was used as the programming language.
 
 This code used the following libraries:
 
-* html - to convert HTML code to text.
-* sys is for accessing system functions and variables.
-* nltk - Natural Language Toolkit (natural language processing toolkit), i.e. library for text analysis in natural language.
+* bs4 - parsing the page to get lyrics
+* codecs - to read txt files
 * googletrans - to translate text into another language via Google Translate.
 * gtts - for text-to-speech synthesis.
+* html - to convert HTML code to text.
+* lxml - to read fb2 files
+* nltk - Natural Language Toolkit (natural language processing toolkit), i.e. library for text analysis in natural language.
+* os - getting the absolute path of a file
 * pygame - for playing sound files and music.
 * PyQt5 - for creating a GUI application.
+* sys is for accessing system functions and variables.
+
+How to use?
