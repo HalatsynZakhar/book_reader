@@ -39,3 +39,17 @@ This code used the following libraries:
 * sys is for accessing system functions and variables.
 
 How to use?
+
+Create virt env
+* Download and install Python https://www.python.org/downloads/ (my version 3.11.3 . When installing, check all the boxes that are offered)
+* Open command prompt and install virtual environment (python -m venv name)
+* Go to directory (cd name)
+* environment activation (Scripts\activate.bat)
+* install dependencies: pip install requests
+* Download file and add to directory name
+* Install the necessary packages for work (pip install requests beautifulsoup4 nltk googletrans==3.1.0a0 gtts pygame PyQt5 lxml)
+* Run the program: (python main.py)
+For the next run:
+* Go to directory (cd name)
+* environment activation (Scripts\activate.bat)
+* Run the program (python main.py)
