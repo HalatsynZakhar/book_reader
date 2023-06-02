@@ -19,7 +19,7 @@ This reader saves progress and all settings when restarting:
 * window position and size
 * interface color
 
-The programming language used was Pothon.
+The programming language used was Python.
 
 The following libraries were used in this code:
 
