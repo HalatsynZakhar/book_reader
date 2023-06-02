@@ -276,11 +276,11 @@ class MyWindow(QWidget):
         if self.center_setting:
             self.switch_center.toggle()
 
-        self.switch_night_toggle = QCheckBox(self.google_Translate_init("Night toggle") + " (N)", self)
-        toggle_and_aljust_layout.addWidget(self.switch_night_toggle)
-        self.switch_night_toggle.setShortcut("N")
-        if self.night_toggle:
-            self.switch_night_toggle.toggle()
+        self.switch_night_mode = QCheckBox(self.google_Translate_init("Night mode") + " (N)", self)
+        toggle_and_aljust_layout.addWidget(self.switch_night_mode)
+        self.switch_night_mode.setShortcut("N")
+        if self.night_mode:
+            self.switch_night_mode.toggle()
 
         # создаем маленький вертикальный лейаут
         next_next_layout = QVBoxLayout()
@@ -292,7 +292,7 @@ class MyWindow(QWidget):
         next_next_layout.addWidget(next_next_button)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
-        next_button = QPushButton(self.google_Translate_init("next sentence") +  "(Right)")
+        next_button = QPushButton(self.google_Translate_init("next sentence") +  " (Right)")
         next_button.setShortcut(self.google_Translate_init("Right"))
         next_next_layout.addWidget(next_button)
 
@@ -343,7 +343,7 @@ class MyWindow(QWidget):
         prev_button.clicked.connect(self.prev_button)
         prev_prev_button.clicked.connect(self.prev_prev_button)
 
-        self.switch_night_toggle.stateChanged.connect(lambda: self.toggle_theme())
+        self.switch_night_mode.stateChanged.connect(lambda: self.toggle_theme())
         self.switch_center.stateChanged.connect(self.center)
         self.switch_audio.stateChanged.connect(self.audio_switch)
         repeat_button.clicked.connect(self.repeat)
@@ -430,7 +430,7 @@ class MyWindow(QWidget):
         self.bookmark, self.count = self.bookmarks_song.get(self.last_song, (0, 0))
 
         if self.text == "":
-            self.text += self.google_Translate_orig("The song was not found. Try again. Input format: <artist> <title>. Search example:") + "Dynazty Waterfall"
+            self.text += self.google_Translate_orig("The song was not found. Try again. Input format: <artist> <title>. Search example:") + " Dynazty Waterfall"
             self.count = 0
             self.bookmark = 0
         else:
@@ -459,7 +459,7 @@ class MyWindow(QWidget):
         self.slow_reading = self.settings.value("slow_reading", "false")
         self.view_current_page = self.settings.value("view_current_page", "true")
         self.view_all_pages = self.settings.value("view_all_pages", "false")
-        self.night_toggle = self.settings.value("night_toggle", "true")
+        self.night_mode = self.settings.value("night_mode", "true")
         self.window_geometry_x = self.settings.value("window_geometry_x", 800)
         self.window_geometry_y = self.settings.value("window_geometry_y", 600)
         self.window_geometry_width = self.settings.value("window_geometry_width", 800)
@@ -472,7 +472,7 @@ class MyWindow(QWidget):
         self.window_geometry_width = int(self.window_geometry_width)
         self.window_geometry_height = int(self.window_geometry_height)
 
-        self.night_toggle = True if self.night_toggle.lower() == "true" else False
+        self.night_mode = True if self.night_mode.lower() == "true" else False
         self.center_setting = True if self.center_setting.lower() == "true" else False
         self.audio_enabled = True if self.audio_enabled.lower() == "true" else False
         self.slow_reading = True if self.slow_reading.lower() == "true" else False
@@ -487,7 +487,7 @@ class MyWindow(QWidget):
         try:
             # Load text based on file extension
             if self.last_book.endswith('.txt'):
-                with codecs.open(self.last_book, 'r', encoding='utf-8') as f:
+                with open(self.last_book, 'r', encoding='windows-1251') as f:
                     self.text = f.read()
             elif self.last_book.endswith('.fb2'):
                 # Открываем файл
@@ -525,9 +525,9 @@ class MyWindow(QWidget):
 
     def handle_editing_path(self):
         self.active_mode = "book"
-        path = self.input_path_to_file.text()
-        absolute_path = os.path.abspath(path)
-        if absolute_path != "":
+        if self.input_path_to_file.text() != "":
+            path = self.input_path_to_file.text()
+            absolute_path = os.path.abspath(path)
             if absolute_path in self.bookmarks_book:
                 """Книга существует, загрузить существующие данные"""
                 self.bookmark, self.count = self.bookmarks_book[absolute_path]
@@ -685,7 +685,7 @@ class MyWindow(QWidget):
 
     def toggle_theme(self):
         # определяем текущую тему
-        if self.switch_night_toggle.isChecked():
+        if self.switch_night_mode.isChecked():
             # переключаем на темную тему, как в предыдущем примере
             QApplication.setStyle('fusion')
             palette = QPalette()
@@ -756,13 +756,13 @@ class MyWindow(QWidget):
         self.text_browser.insertHtml(self.filter_text(text + end))
 
     def out_marker1(self, text, end="\n"):
-        if self.switch_night_toggle.isChecked():
+        if self.switch_night_mode.isChecked():
             self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text + end)))
         else:
             self.text_browser.insertHtml('<span style="color: #830e0e;">{}</span>'.format(self.filter_text(text + end)))
 
     def out_marker2(self, text, end="\n"):
-        if self.switch_night_toggle.isChecked():
+        if self.switch_night_mode.isChecked():
             self.text_browser.insertHtml('<span style="color: #830e0e;">{}</span>'.format(self.filter_text(text + end)))
         else:
             self.text_browser.insertHtml('<span style="color: #ffff00;">{}</span>'.format(self.filter_text(text + end)))
@@ -792,7 +792,7 @@ class MyWindow(QWidget):
 
     def output_paragraph(self):
         if self.bookmark == 0:
-            self.out_red(self.google_Translate_to_trans("START") + "\n")
+            self.out_red(self.google_Translate_to_trans("Beginning of text") + "\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
 
@@ -812,7 +812,7 @@ class MyWindow(QWidget):
                 self.out(self.list_sentences_trans[i], end=" ")
 
         if self.bookmark == len(self.list_paragraph) - 1:
-            self.out_red("\n\n" + self.google_Translate_to_trans("THE END"))
+            self.out_red("\n\n" + self.google_Translate_to_trans("End of text"))
 
         if self.switch_audio.isChecked():
             self.repeat()
@@ -849,7 +849,7 @@ class MyWindow(QWidget):
         self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
         self.settings.setValue("view_current_page", self.switch_Hide_current_page.isChecked())
         self.settings.setValue("view_all_pages", self.switch_Hide_all_pages.isChecked())
-        self.settings.setValue("night_toggle", self.switch_night_toggle.isChecked())
+        self.settings.setValue("night_mode", self.switch_night_mode.isChecked())
         self.settings.setValue("window_geometry_x", self.geometry().x())
         self.settings.setValue("window_geometry_y", self.geometry().y())
         self.settings.setValue("window_geometry_width", self.geometry().width())
