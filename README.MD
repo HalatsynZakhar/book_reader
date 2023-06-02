@@ -1,32 +1,35 @@
 Reader for learning English.
 
-Input data: English_book.txt.
+Input data: English_book.txt or Music title
 
 Displays text with parallel translation paragraph by paragraph on one page. Each sentence is highlighted while reading for easier reading.
 
 Settings:
-* voice sentences at 2 different speeds
-* dark theme and light theme
-* display current page and progress (optional)
-* document navigation
-* selection of any .txt on the computer
 
-This reader saves progress and all settings when restarting:
-* current book
-* current offer
-* current page
-* voice settings
-* window position and size
-* interface color
+voice suggestions at 2 different speeds
+dark theme and light theme
+display current page and progress (optional)
+document navigation
+choosing any .txt on the computer
+This reader saves progress and all settings on restart:
 
-The programming language used was Python.
+current book
+current offer
+current page
+voice settings
+window position and size
+interface color
 
-The following libraries were used in this code:
+To get the original lyrics of the song, use the site https://muztext.com/
 
-* html - to convert HTML code to text.
-* sys - to access system functions and variables.
-* nltk - Natural Language Toolkit (natural language processing toolkit), i.e. library for text analysis in natural language.
-* googletrans - to translate text into another language via Google Translate.
-* gtts - for text-based speech synthesis.
-* pygame - for playing sound files and music.
-* PyQt5 - for creating a GUI application.
+Python was used as the programming language.
+
+This code used the following libraries:
+
+html - to convert HTML code to text.
+sys is for accessing system functions and variables.
+nltk - Natural Language Toolkit (natural language processing toolkit), i.e. library for text analysis in natural language.
+googletrans - to translate text into another language via Google Translate.
+gtts - for text-to-speech synthesis.
+pygame - for playing sound files and music.
+PyQt5 - for creating a GUI application.
