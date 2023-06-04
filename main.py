@@ -86,41 +86,8 @@ class MyWindow(QWidget):
         original_lang_layout.addWidget(self.lang_of_study_label)
 
         self.language_combo_original = QComboBox()
-        self.language_combo_original.addItem("Azərbaycan dili", "az")
-        self.language_combo_original.addItem("Bahasa Indonesia", "id")
-        self.language_combo_original.addItem("Bosanski", "bs")
-        self.language_combo_original.addItem("Català", "ca")
-        self.language_combo_original.addItem("Čeština", "cs")
-        self.language_combo_original.addItem("Dansk", "da")
-        self.language_combo_original.addItem("Deutsch", "de")
-        self.language_combo_original.addItem("Eesti", "et")
-        self.language_combo_original.addItem("English", "en")
-        self.language_combo_original.addItem("Español", "es")
-        self.language_combo_original.addItem("Filipino", "tl")
-        self.language_combo_original.addItem("Français", "fr")
-        self.language_combo_original.addItem("Galego", "gl")
-        self.language_combo_original.addItem("Greek", "el")
-        self.language_combo_original.addItem("Hrvatski", "hr")
-        self.language_combo_original.addItem("Italiano", "it")
-        self.language_combo_original.addItem("Kiswahili", "sw")
-        self.language_combo_original.addItem("Latviešu", "lv")
-        self.language_combo_original.addItem("Lietuvių", "lt")
-        self.language_combo_original.addItem("Magyar", "hu")
-        self.language_combo_original.addItem("Македонски", "mk")
-        self.language_combo_original.addItem("Nederlands", "nl")
-        self.language_combo_original.addItem("Norsk", "no")
-        self.language_combo_original.addItem("Polski", "pl")
-        self.language_combo_original.addItem("Português", "pt")
-        self.language_combo_original.addItem("Română", "ro")
-        self.language_combo_original.addItem("Русский", "ru")
-        self.language_combo_original.addItem("Serbian", "sr")
-        self.language_combo_original.addItem("Slovenčina", "sk")
-        self.language_combo_original.addItem("Slovenščina", "sl")
-        self.language_combo_original.addItem("Suomi", "fi")
-        self.language_combo_original.addItem("Svenska", "sv")
-        self.language_combo_original.addItem("Tiếng Việt", "vi")
-        self.language_combo_original.addItem("Türkçe", "tr")
-        self.language_combo_original.addItem("Українська", "uk")
+        for language, code in self.languages.items():
+            self.language_combo_original.addItem(language, code)
 
         original_lang_layout.addWidget(self.language_combo_original)
 
@@ -135,41 +102,9 @@ class MyWindow(QWidget):
         translate_lang_layout.addWidget(self.choice_trans_lang_label)
 
         self.language_combo_translate = QComboBox()
-        self.language_combo_translate.addItem("Azərbaycan dili", "az")
-        self.language_combo_translate.addItem("Bahasa Indonesia", "id")
-        self.language_combo_translate.addItem("Български", "bg")
-        self.language_combo_translate.addItem("Català", "ca")
-        self.language_combo_translate.addItem("Čeština", "cs")
-        self.language_combo_translate.addItem("Dansk", "da")
-        self.language_combo_translate.addItem("Deutsch", "de")
-        self.language_combo_translate.addItem("Eesti", "et")
-        self.language_combo_translate.addItem("English", "en")
-        self.language_combo_translate.addItem("Español", "es")
-        self.language_combo_translate.addItem("Filipino", "tl")
-        self.language_combo_translate.addItem("Français", "fr")
-        self.language_combo_translate.addItem("Galego", "gl")
-        self.language_combo_translate.addItem("Greek", "el")
-        self.language_combo_translate.addItem("Hrvatski", "hr")
-        self.language_combo_translate.addItem("Italiano", "it")
-        self.language_combo_translate.addItem("Kiswahili", "sw")
-        self.language_combo_translate.addItem("Latviešu", "lv")
-        self.language_combo_translate.addItem("Lietuvių", "lt")
-        self.language_combo_translate.addItem("Magyar", "hu")
-        self.language_combo_translate.addItem("Македонски", "mk")
-        self.language_combo_translate.addItem("Nederlands", "nl")
-        self.language_combo_translate.addItem("Norsk", "no")
-        self.language_combo_translate.addItem("Polski", "pl")
-        self.language_combo_translate.addItem("Português", "pt")
-        self.language_combo_translate.addItem("Română", "ro")
-        self.language_combo_translate.addItem("Русский", "ru")
-        self.language_combo_translate.addItem("Српски", "sr")
-        self.language_combo_translate.addItem("Slovenčina", "sk")
-        self.language_combo_translate.addItem("Slovenščina", "sl")
-        self.language_combo_translate.addItem("Suomi", "fi")
-        self.language_combo_translate.addItem("Svenska", "sv")
-        self.language_combo_translate.addItem("Tiếng Việt", "vi")
-        self.language_combo_translate.addItem("Türkçe", "tr")
-        self.language_combo_translate.addItem("Українська", "uk")
+
+        for language, code in self.languages.items():
+            self.language_combo_translate.addItem(language, code)
 
         translate_lang_layout.addWidget(self.language_combo_translate)
 
@@ -577,6 +512,44 @@ class MyWindow(QWidget):
     def download_settings(self):
 
         self.settings = QSettings("halatsyn_zakhar", "book_reader")
+
+        self.languages = {
+            "Azərbaycan dili": "az",
+            "Bahasa Indonesia": "id",
+            "Bosanski": "bs",
+            "Català": "ca",
+            "Čeština": "cs",
+            "Dansk": "da",
+            "Deutsch": "de",
+            "Eesti": "et",
+            "English": "en",
+            "Español": "es",
+            "Filipino": "tl",
+            "Français": "fr",
+            "Galego": "gl",
+            "Greek": "el",
+            "Hrvatski": "hr",
+            "Italiano": "it",
+            "Kiswahili": "sw",
+            "Latviešu": "lv",
+            "Lietuvių": "lt",
+            "Magyar": "hu",
+            "Македонски": "mk",
+            "Nederlands": "nl",
+            "Norsk": "no",
+            "Polski": "pl",
+            "Português": "pt",
+            "Română": "ro",
+            "Русский": "ru",
+            "Serbian": "sr",
+            "Slovenčina": "sk",
+            "Slovenščina": "sl",
+            "Suomi": "fi",
+            "Svenska": "sv",
+            "Tiếng Việt": "vi",
+            "Türkçe": "tr",
+            "Українська": "uk"
+        }
 
         self.night_mode_default = (QColor(53, 53, 53),
                                    QColor(255, 255, 255),
@@ -994,14 +967,15 @@ class MyWindow(QWidget):
 
         """Вывод параграфа и перевода, с выделением предложения"""
 
+        self.text_browser.append("\t")
+
         for i in range(len(self.list_sentences)):
             if self.count == i:
                 self.out_marker1(self.list_sentences[i], end=" ")
             else:
                 self.out(self.list_sentences[i], end=" ")
 
-        self.out("")
-        self.out("")
+        self.text_browser.append("\n\t")
 
         for i in range(len(self.list_sentences_trans)):
             if self.count == i:
