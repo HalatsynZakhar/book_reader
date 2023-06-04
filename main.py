@@ -3,12 +3,10 @@ import os
 import sys
 import threading
 
-from functools import lru_cache
 import requests
 from bs4 import BeautifulSoup
 
 import nltk
-from googletrans import Translator
 from gtts import gTTS
 import pygame
 
