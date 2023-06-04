@@ -1,31 +1,28 @@
 Reader for learning English (or any other language)
 
-Input data: book.txt (book.fb2) or Music title
+Input data: book.txt (book.fb2) or music title
 
-Displays text with parallel translation paragraph by paragraph on one page. Each sentence is highlighted while reading for easier reading.
+Result: Displays text with parallel translation paragraph by paragraph on one page. Each sentence is highlighted and voiced as it is read.
 
-Settings:
+Available options:
 
-* voice suggestions at 2 different speeds
-* dark theme and light theme
+* The choice of any 2 languages is available as native and as studied from 36 available
+* Play the current sentence at 2 different speeds
+* dark theme and light theme (the ability to fully customize the interface)
 * display current page and progress (optional)
 * document navigation
-* choosing any .txt on the computer
-* This reader saves progress and all settings on restart:
+* reading any .txt or .fb2 document on computer
+* Save all settings and bookmark all documents ever opened
+* Auto-tuning interface for the user's native language
+* Translator data is cached to optimize translator usage
+* Customized hotkeys on main keys for ease of use
 
-current book
-current offer
-current page
-voice settings
-window position and size
-interface color
-
-To get the original lyrics of the song, use the site https://muztext.com/
+To get the original lyrics, use the site: https://muztext.com/
 
 Python was used as the programming language.
 
 This code used the following libraries:
-
+* threading - implemented translation of the interface by a parallel thread to avoid freezing the interface
 * bs4 - parsing the page to get lyrics
 * codecs - to read txt files
 * googletrans - to translate text into another language via Google Translate.
@@ -46,7 +43,7 @@ Create virt env
 * Go to directory (cd name)
 * environment activation (Scripts\activate.bat)
 * install dependencies: pip install requests
-* Download file and add to directory name
+* Download files *.py and add to directory name
 * Install the necessary packages for work (pip install requests beautifulsoup4 nltk googletrans==3.1.0a0 gtts pygame PyQt5 lxml)
 * Run the program: (python main.py)
 
