@@ -67,12 +67,12 @@ class MyWindow(QWidget):
 
         # создаем кнопку "prev prev" и добавляем ее в горизонтальный лейаут
         self.prev_prev_button = QPushButton(self.google_Translate_init("Previous paragraph") + " (Ctrl+Left)")
-        self.prev_prev_button.setShortcut(self.google_Translate_init("Ctrl+Left"))
+        self.prev_prev_button.setShortcut("Ctrl+Left")
         prev_buttons_layout.addWidget(self.prev_prev_button)
 
         # создаем кнопку "previous" и добавляем ее в горизонтальный лейаут
         self.previous_button = QPushButton(self.google_Translate_init("Previous") + " (Left)")
-        self.previous_button.setShortcut(self.google_Translate_init("Left"))
+        self.previous_button.setShortcut("Left")
         prev_buttons_layout.addWidget(self.previous_button)
 
         choice_lang_and_font_layout = QVBoxLayout()
@@ -217,12 +217,12 @@ class MyWindow(QWidget):
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         self.next_next_button = QPushButton(self.google_Translate_init("next paragraph") + " (Ctrl+Right)")
-        self.next_next_button.setShortcut(self.google_Translate_init("Ctrl+Right"))
+        self.next_next_button.setShortcut("Ctrl+Right")
         next_next_layout.addWidget(self.next_next_button)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         self.next_button = QPushButton(self.google_Translate_init("next sentence") + " (Right)")
-        self.next_button.setShortcut(self.google_Translate_init("Right"))
+        self.next_button.setShortcut("Right")
         next_next_layout.addWidget(self.next_button)
 
         # добавляем горизонтальный лейаут в вертикальный лейаут
