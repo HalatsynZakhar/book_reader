@@ -95,11 +95,9 @@ class MyWindow(QWidget):
         self.language_combo_original.addItem("Français", "fr")
         self.language_combo_original.addItem("Galego", "gl")
         self.language_combo_original.addItem("Greek", "el")
-        self.language_combo_original.addItem("हिन्दी", "hi")
         self.language_combo_original.addItem("Hrvatski", "hr")
         self.language_combo_original.addItem("Italiano", "it")
         self.language_combo_original.addItem("Kiswahili", "sw")
-        self.language_combo_original.addItem("한국어", "ko")
         self.language_combo_original.addItem("Latviešu", "lv")
         self.language_combo_original.addItem("Lietuvių", "lt")
         self.language_combo_original.addItem("Magyar", "hu")
@@ -115,7 +113,6 @@ class MyWindow(QWidget):
         self.language_combo_original.addItem("Slovenščina", "sl")
         self.language_combo_original.addItem("Suomi", "fi")
         self.language_combo_original.addItem("Svenska", "sv")
-        self.language_combo_original.addItem("ไทย", "th")
         self.language_combo_original.addItem("Tiếng Việt", "vi")
         self.language_combo_original.addItem("Türkçe", "tr")
         self.language_combo_original.addItem("Українська", "uk")
@@ -141,17 +138,15 @@ class MyWindow(QWidget):
         self.language_combo_translate.addItem("Dansk", "da")
         self.language_combo_translate.addItem("Deutsch", "de")
         self.language_combo_translate.addItem("Eesti", "et")
-        self.language_combo_translate.addItem("Ελληνικά", "el")
         self.language_combo_translate.addItem("English", "en")
         self.language_combo_translate.addItem("Español", "es")
         self.language_combo_translate.addItem("Filipino", "tl")
         self.language_combo_translate.addItem("Français", "fr")
         self.language_combo_translate.addItem("Galego", "gl")
-        self.language_combo_translate.addItem("हिन्दी", "hi")
+        self.language_combo_translate.addItem("Greek", "el")
         self.language_combo_translate.addItem("Hrvatski", "hr")
         self.language_combo_translate.addItem("Italiano", "it")
         self.language_combo_translate.addItem("Kiswahili", "sw")
-        self.language_combo_translate.addItem("한국어", "ko")
         self.language_combo_translate.addItem("Latviešu", "lv")
         self.language_combo_translate.addItem("Lietuvių", "lt")
         self.language_combo_translate.addItem("Magyar", "hu")
@@ -167,7 +162,6 @@ class MyWindow(QWidget):
         self.language_combo_translate.addItem("Slovenščina", "sl")
         self.language_combo_translate.addItem("Suomi", "fi")
         self.language_combo_translate.addItem("Svenska", "sv")
-        self.language_combo_translate.addItem("ไทย", "th")
         self.language_combo_translate.addItem("Tiếng Việt", "vi")
         self.language_combo_translate.addItem("Türkçe", "tr")
         self.language_combo_translate.addItem("Українська", "uk")
@@ -501,7 +495,9 @@ class MyWindow(QWidget):
 
     def handle_editing_song(self):
         self.active_mode = "song"
-        find_text_filtered = self.input_find_songs.text().replace(" ", "-").lower()
+        find_text_filtered = self.input_find_songs.text().strip()
+        find_text_filtered = find_text_filtered.replace(" ", "-").lower()
+
         if find_text_filtered != "":
             if find_text_filtered in self.bookmarks_song:
                 self.bookmark, self.count = self.bookmarks_song[find_text_filtered]
@@ -526,14 +522,16 @@ class MyWindow(QWidget):
             self.input_path_to_file.setText(fileName)
             self.handle_editing_path()
 
-    def read_song(self):
-        self.text = ""
+
+    def get_muztext(self, lyrict_title):
+        # Проверяем, есть ли данные в кеше
+        if lyrict_title in self.cache_Music:
+            return self.cache_Music[lyrict_title]
+
+        # URL страницы с текстом песни
+        url = 'https://muztext.com/lyrics/{}'.format(lyrict_title)
+
         try:
-            lyrict_title = self.last_song
-
-            # URL страницы с текстом песни
-            url = 'https://muztext.com/lyrics/{}'.format(lyrict_title)
-
             # Отправляем GET-запрос на сервер
             response = requests.get(url)
 
@@ -543,16 +541,24 @@ class MyWindow(QWidget):
             # Находим элемент с текстом песни
             lyrics = soup.find('table', {'class': 'orig'})
 
-            # Выводим текст песни
-            self.text = lyrics.text
+            # Сохраняем данные в кеше
+            self.cache_Music[lyrict_title] = lyrics.text
         except:
-            pass
+            return ""
+        return lyrics.text
+
+
+    def read_song(self):
+
+
+        self.text = self.get_muztext(self.last_song)
+
 
         self.bookmark, self.count = self.bookmarks_song.get(self.last_song, (0, 0))
 
         if self.text == "":
             self.text += self.google_Translate_to_orig_with_Eng(
-                "The song was not found. Try again. Input format: <artist> <title>. Search example:") + " Dynazty Waterfall"
+                "The song was not found. Try again. Input format: <artist>-<title> or <artist> <title>. Search example:") + " dynazty-waterfall, dynazty waterfall"
             self.count = 0
             self.bookmark = 0
         else:
@@ -602,6 +608,7 @@ class MyWindow(QWidget):
                                  )
 
         # Загрузка настроек
+        self.cache_Music = self.settings.value("cache_Music", {})
         self.night_mod_colors = self.settings.value('night_mod_colors',
                                                     [color.name() for color in self.night_mode_default])
         self.day_mode_colors = self.settings.value('day_mode_colors', [color.name() for color in self.day_mode_default])
@@ -692,6 +699,7 @@ class MyWindow(QWidget):
         self.active_mode = "book"
         if self.input_path_to_file.text() != "":
             path = self.input_path_to_file.text()
+            path = path.strip()
             absolute_path = os.path.abspath(path)
             if absolute_path in self.bookmarks_book:
                 """Книга существует, загрузить существующие данные"""
@@ -997,11 +1005,13 @@ class MyWindow(QWidget):
 
         self.hide_curren_and_all_page()
 
-        if self.active_mode == "book":
-            self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
-        elif self.active_mode == "song":
-            self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
+        if self.bookmark != 0 or self.count != 0:
+            if self.active_mode == "book":
+                self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
+            elif self.active_mode == "song":
+                self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
         self.save_settings()
+
 
         # устанавливаем валидатор для ограничения ввода только целых чисел
         validator = QIntValidator(0, len(self.list_paragraph) - 1, self)
@@ -1014,6 +1024,7 @@ class MyWindow(QWidget):
 
     def save_settings(self):
         # Сохранение настроек
+        self.settings.setValue("cache_Music", self.cache_Music),
         self.settings.setValue("night_mod_colors", self.night_mod_colors)
         self.settings.setValue("day_mode_colors", self.day_mode_colors)
         self.settings.setValue("default_language_orig", self.language_combo_original.currentData())
