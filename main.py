@@ -698,7 +698,7 @@ class MyWindow(QWidget):
     def handle_editing_finished(self):
         # обработчик событий, который будет вызываться при изменении поля
         self.count = 0
-        self.bookmark = int(self.input_field.text())
+        self.bookmark = int(self.input_field.text()) - 1
 
         self.input_field.clearFocus()
         self.input_field.clear()
@@ -787,7 +787,7 @@ class MyWindow(QWidget):
             current_thread.start()
         else:
             # Выключить аудио
-            pygame.quit()
+            self.stop_flag.set()
 
     def google_Translate_to_trans_with_random_lang(self, text):
         """Переводит реальные абзацы, исходный язык неизвестен, реузльтат тоже
@@ -963,6 +963,7 @@ class MyWindow(QWidget):
 
     def output_paragraph(self):
         if self.bookmark == 0:
+            self.text_browser.append("\t")
             self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text") + "\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
@@ -984,6 +985,7 @@ class MyWindow(QWidget):
                 self.out(self.list_sentences_trans[i], end=" ")
 
         if self.bookmark == len(self.list_paragraph) - 1:
+            self.text_browser.append("\t")
             self.out_marker2("\n\n" + self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
@@ -992,16 +994,16 @@ class MyWindow(QWidget):
 
         self.hide_curren_and_all_page()
 
-        if self.bookmark != 0 or self.count != 0:
-            if self.active_mode == "book":
-                self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
-            elif self.active_mode == "song":
-                self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
+
+        if self.active_mode == "book" and self.last_book and self.last_book in self.bookmarks_book:
+            self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
+        elif self.active_mode == "song" and self.last_song in self.bookmarks_song:
+            self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
         self.save_settings()
 
 
         # устанавливаем валидатор для ограничения ввода только целых чисел
-        validator = QIntValidator(0, len(self.list_paragraph) - 1, self)
+        validator = QIntValidator(1, len(self.list_paragraph), self)
         self.input_field.setValidator(validator)
 
         if self.switch_center.isChecked():
@@ -1037,7 +1039,6 @@ class MyWindow(QWidget):
         # вызываем метод save() перед закрытием окна
         self.save_settings()
         self.translator.save_cache_to_settings()
-        pygame.close()
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)
 
