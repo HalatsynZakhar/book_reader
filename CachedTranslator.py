@@ -1,4 +1,3 @@
-import functools
 from PyQt5.QtCore import QSettings
 from googletrans import Translator
 
