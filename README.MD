@@ -22,7 +22,7 @@ To get the original lyrics, use the site: https://muztext.com/
 Python was used as the programming language.
 
 This code used the following libraries:
-* threading - implemented translation of the interface by a parallel thread to avoid freezing the interface
+* threading - implemented translation of the interface and generation and playback of audio is implemented in parallel to avoid interface interruption
 * bs4 - parsing the page to get lyrics
 * codecs - to read txt files
 * googletrans - to translate text into another language via Google Translate.

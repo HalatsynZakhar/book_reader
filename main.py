@@ -7,7 +7,6 @@ import requests
 from bs4 import BeautifulSoup
 
 import nltk
-from gtts import gTTS
 import pygame
 
 from PyQt5 import QtCore, QtGui
@@ -17,6 +16,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
     QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog
 from lxml import etree
 
+from AudioThread import AudioThread
 from CachedTranslator import CachedTranslator
 from MyTextBrowser import MyTextBrowser
 
@@ -25,8 +25,13 @@ class MyWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.lock = threading.Lock()
+        pygame.init()
+
+        self.stop_flag = None
         # Создание экземпляра CachedTranslator
         self.translator = CachedTranslator()
+
         # Загрузка кеша из QSettings
         self.translator.load_cache_from_settings()
 
@@ -189,7 +194,7 @@ class MyWindow(QWidget):
         horizontal_layout.addLayout(audio_setting_layout)
 
         # создаем кнопку "Repeat" и добавляем ее в вертикальний аудио лейаут
-        self.repeat_button = QPushButton(self.google_Translate_init("Repeat") + " (R)")
+        self.repeat_button = QPushButton(self.google_Translate_init("Repeat playback") + " (R)")
         audio_setting_layout.addWidget(self.repeat_button)
         self.repeat_button.setShortcut("R")
 
@@ -447,7 +452,7 @@ class MyWindow(QWidget):
         lang_of_study_label_text = self.google_Translate_to_trans_with_eng("Language of study: ")
         choice_trans_lang_label_text = self.google_Translate_to_trans_with_eng("Native language: ")
         font_size_label_text = self.google_Translate_to_trans_with_eng("Font size")
-        repaet_button_text = self.google_Translate_to_trans_with_eng("Repeat") + " (R)"
+        repaet_button_text = self.google_Translate_to_trans_with_eng("Repeat playback") + " (R)"
         switch_audio_text = self.google_Translate_to_trans_with_eng("Audio") + " (V)"
         switch_audio_text_slow_text = self.google_Translate_to_trans_with_eng("Slow playback")
         go_to_page_label_text = self.google_Translate_to_trans_with_eng("Go to page:")
@@ -783,13 +788,19 @@ class MyWindow(QWidget):
         return super().event(event)
 
     def repeat_clicked(self):
-        pygame.quit()
-        pygame.init()
-        tts = gTTS(self.list_sentences[self.count], slow=self.switch_audio_slow.isChecked(),
-                   lang=self.language_combo_original.currentData())
-        tts.save('sentence.mp3')
-        song = pygame.mixer.Sound('sentence.mp3')
-        song.play()
+
+        if self.stop_flag != None:
+            # остановка генерации аудиофайла при переключении на следующее предложение
+            self.stop_flag.set()
+
+        self.stop_flag = threading.Event()
+        thread = AudioThread(self.list_sentences[self.count], self.switch_audio_slow.isChecked(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
+        thread.start()
+
+
+
+
+
 
     def center(self, state):
         if state == Qt.Checked:
@@ -799,7 +810,8 @@ class MyWindow(QWidget):
 
     def audio_switch(self, state):
         if state == Qt.Checked:
-            self.repeat_clicked()
+            current_thread = threading.Thread(target=self.repeat_clicked)
+            current_thread.start()
         else:
             # Выключить аудио
             pygame.quit()
@@ -1001,7 +1013,8 @@ class MyWindow(QWidget):
             self.out_marker2("\n\n" + self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
-            self.repeat_clicked()
+            current_thread = threading.Thread(target=self.repeat_clicked)
+            current_thread.start()
 
         self.hide_curren_and_all_page()
 
@@ -1050,6 +1063,7 @@ class MyWindow(QWidget):
         # вызываем метод save() перед закрытием окна
         self.save_settings()
         self.translator.save_cache_to_settings()
+        pygame.close()
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)
 
