@@ -294,7 +294,7 @@ class MyWindow(QWidget):
         self.button_navigator.clicked.connect(self.select_file)
 
         self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
-        self.input_find_songs.setPlaceholderText("{}".format(self.last_song))
+        self.input_find_songs.setPlaceholderText(" ".join(self.last_song))
 
         if self.active_mode == "book":
             self.setWindowTitle("{}".format(self.last_book))
@@ -431,25 +431,7 @@ class MyWindow(QWidget):
         # сохраняем язык перевода в конфигурационный файл
         # и обновляем настройки в вашем приложении
 
-    def handle_editing_song(self):
-        self.active_mode = "song"
-        find_text_filtered = self.input_find_songs.text().strip()
-        find_text_filtered = find_text_filtered.replace(" ", "-").lower()
 
-        if find_text_filtered != "":
-            if find_text_filtered in self.bookmarks_song:
-                self.bookmark, self.count = self.bookmarks_song[find_text_filtered]
-            else:
-                self.bookmark = 0
-                self.count = 0
-            self.last_song = find_text_filtered
-
-        self.input_find_songs.setPlaceholderText("{}".format(self.last_song))
-        self.setWindowTitle("{}".format(self.last_song))
-
-        self.input_find_songs.clearFocus()
-
-        self.read_song()
 
     def select_file(self):
         options = QFileDialog.Options()
@@ -461,13 +443,46 @@ class MyWindow(QWidget):
             self.handle_editing_path()
 
 
-    def get_muztext(self, lyrict_title):
+
+    def get_musinfo(self, lyrict_title_list):
         # Проверяем, есть ли данные в кеше
-        if lyrict_title in self.cache_Music:
-            return self.cache_Music[lyrict_title]
+        if lyrict_title_list in self.cache_Music:
+            return self.cache_Music[lyrict_title_list]
 
         # URL страницы с текстом песни
-        url = 'https://muztext.com/lyrics/{}'.format(lyrict_title)
+        url = 'https://ru.musinfo.net/lyrics/{}'.format("/".join(lyrict_title_list))
+
+        try:
+            # Отправляем GET-запрос на сервер
+            response = requests.get(url)
+
+            # Парсим HTML-страницу с помощью BeautifulSoup
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Находим элемент с текстом песни
+            lyrics = soup.find('td', {'id': 'lyric-src'})
+
+            text = lyrics.find_all('div', {'class': 'line'})
+            text_result = ""
+            for i in text:
+                if i.text[0] == "[":
+                    continue
+                text_result += i.text + "\n"
+
+            # Сохраняем данные в кеше
+            self.cache_Music[lyrict_title_list] = text_result
+        except:
+            return ""
+        return text_result
+
+
+    def get_muztext(self, lyrict_title_list):
+        # Проверяем, есть ли данные в кеше
+        if lyrict_title_list in self.cache_Music:
+            return self.cache_Music[lyrict_title_list]
+
+        # URL страницы с текстом песни
+        url = 'https://muztext.com/lyrics/{}'.format("-".join(lyrict_title_list))
 
         try:
             # Отправляем GET-запрос на сервер
@@ -480,23 +495,36 @@ class MyWindow(QWidget):
             lyrics = soup.find('table', {'class': 'orig'})
 
             # Сохраняем данные в кеше
-            self.cache_Music[lyrict_title] = lyrics.text
+            self.cache_Music[lyrict_title_list] = lyrics.text
         except:
             return ""
         return lyrics.text
 
-
     def read_song(self):
-
-
         self.text = self.get_muztext(self.last_song)
+        if self.text == "":
+            self.text = self.get_musinfo(self.last_song)
 
 
-        self.bookmark, self.count = self.bookmarks_song.get(self.last_song, (0, 0))
+
+
+        if self.last_song in self.bookmarks_song:
+            self.bookmark, self.count = self.bookmarks_song[self.last_song]
+        else:
+            """Песня новая"""
+            if self.text != "":
+                """если книга существует, добавляем запись, создаем закладки"""
+                self.bookmarks_song[self.last_song] = (0, 0)
+                self.bookmark, self.count = self.bookmarks_song[self.last_song]
+            else:
+                """за данным запросом книги не существует"""
+                self.bookmark = 0
+                self.count = 0
+
 
         if self.text == "":
             self.text += self.google_Translate_to_orig_with_Eng(
-                "The song was not found. Try again. Input format: <artist>-<title> or <artist> <title>. Search example:") + " dynazty-waterfall, dynazty waterfall"
+                "The song was not found. Try again. Input format: <artist> <title>. Search example: ") + "dynazty waterfall"
             self.count = 0
             self.bookmark = 0
         else:
@@ -656,7 +684,20 @@ class MyWindow(QWidget):
         except:
             pass
 
-        self.bookmark, self.count = self.bookmarks_book.get(self.last_book, (0, 0))
+        if self.last_book in self.bookmarks_book:
+            self.bookmark, self.count = self.bookmarks_book[self.last_book]
+        else:
+            """Книга новая"""
+            if self.text != "":
+                """если книга существует, добавляем запись, создаем закладки"""
+                self.bookmarks_book[self.last_book] = (0, 0)
+                self.bookmark, self.count = self.bookmarks_book[self.last_book]
+            else:
+                """за данным запросом книги не существует"""
+                self.bookmark = 0
+                self.count = 0
+
+
         if self.text == "":
             self.text += self.google_Translate_to_orig_with_Eng(
                 r"The path to the file is missing, or the file is invalid. Please enter a valid relative or " \
@@ -670,20 +711,25 @@ class MyWindow(QWidget):
         self.list_paragraph = self.text.split("\n\n")
         self.list_paragraph = [x for x in self.list_paragraph if x]
         self.formint_output_text()
+    def handle_editing_song(self):
+        self.active_mode = "song"
+        if self.input_find_songs.text() != "":
+            find_text_filtered = tuple(filter(lambda x: x != '', map(str.lower, self.input_find_songs.text().split())))
+            self.last_song = find_text_filtered
 
+        self.input_find_songs.setPlaceholderText("{}".format(" ".join(self.last_song)))
+        self.setWindowTitle("{}".format(" ".join(self.last_song)))
+
+        self.input_find_songs.clearFocus()
+
+        self.read_song()
     def handle_editing_path(self):
         self.active_mode = "book"
         if self.input_path_to_file.text() != "":
             path = self.input_path_to_file.text()
             path = path.strip()
             absolute_path = os.path.abspath(path)
-            if absolute_path in self.bookmarks_book:
-                """Книга существует, загрузить существующие данные"""
-                self.bookmark, self.count = self.bookmarks_book[absolute_path]
-            else:
-                """Книга новая"""
-                self.bookmark = 0
-                self.count = 0
+
             self.last_book = absolute_path
 
         self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
@@ -997,7 +1043,7 @@ class MyWindow(QWidget):
 
             if not self.switch_center.isChecked():
                 self.out("\t", "")
-            self.out_marker2("\n" + self.google_Translate_to_orig_with_Eng("End of text"))
+            self.out_marker2(self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
             current_thread = threading.Thread(target=self.repeat_clicked)
