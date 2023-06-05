@@ -299,7 +299,7 @@ class MyWindow(QWidget):
         if self.active_mode == "book":
             self.setWindowTitle("{}".format(self.last_book))
         if self.active_mode == "song":
-            self.setWindowTitle("{}".format(self.last_song))
+            self.setWindowTitle(" ".join(self.last_song))
 
     def open_settings_dialog(self):
         # Создаем диалоговое окно настроек интерфейса
@@ -337,7 +337,7 @@ class MyWindow(QWidget):
 
             main_layout.addLayout(hor_layout)
 
-        default_button = QPushButton(self.translate_dialog_windows[15])
+        default_button = QPushButton(self.translate_dialog_windows[-1])
         default_button.clicked.connect(self.reset_theme)
 
         main_layout.addWidget(default_button)
@@ -723,7 +723,8 @@ class MyWindow(QWidget):
     def handle_editing_song(self):
         self.active_mode = "song"
         if self.input_find_songs.text() != "":
-            find_text_filtered = tuple(filter(lambda x: x != '', map(str.lower, self.input_find_songs.text().split())))
+            text_fil = self.input_find_songs.text().replace("'", " ")
+            find_text_filtered = tuple(filter(lambda x: x != '', map(str.lower, text_fil.split())))
             self.last_song = find_text_filtered
 
         self.input_find_songs.setPlaceholderText("{}".format(" ".join(self.last_song)))
