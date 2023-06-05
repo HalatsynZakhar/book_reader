@@ -17,7 +17,7 @@ Available options:
 * Translator data is cached to optimize translator usage
 * Customized hotkeys on main keys for ease of use
 
-To get the original lyrics, use the site: https://muztext.com/
+To get the original lyrics, use the site: https://muztext.com/, https://ru.musinfo.net/
 
 Python was used as the programming language.
 
