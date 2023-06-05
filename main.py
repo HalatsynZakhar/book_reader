@@ -314,8 +314,11 @@ class MyWindow(QWidget):
         history_sort = sorted(list([" ".join(i) for i in self.bookmarks_song.keys()]))
         bookmarks_list_song.addItems(history_sort)
 
-        index = bookmarks_list_song.findText(" ".join(self.last_song))
-        bookmarks_list_song.setCurrentIndex(index)
+        if self.active_mode == "song":
+            index = bookmarks_list_song.findText(" ".join(self.last_song))
+            bookmarks_list_song.setCurrentIndex(index)
+        else:
+            bookmarks_list_song.setCurrentIndex(-1)
 
         bookmarks_list_song.currentIndexChanged.connect(lambda: self.handle_bookmark_selection_song(bookmarks_list_song))
         bookmarks_list_song.showPopup()
@@ -330,8 +333,11 @@ class MyWindow(QWidget):
         history_sort = sorted(list(self.bookmarks_book.keys()))
         bookmarks_list.addItems(history_sort)
 
-        index = bookmarks_list.findText(self.last_book)
-        bookmarks_list.setCurrentIndex(index)
+        if self.active_mode == "book":
+            index = bookmarks_list.findText(self.last_book)
+            bookmarks_list.setCurrentIndex(index)
+        else:
+            bookmarks_list.setCurrentIndex(-1)
 
         bookmarks_list.currentIndexChanged.connect(lambda: self.handle_bookmark_selection(bookmarks_list))
         bookmarks_list.showPopup()
@@ -340,14 +346,6 @@ class MyWindow(QWidget):
         selected_bookmark = bookmark_list.currentText()
         self.input_path_to_file.setText(selected_bookmark)
         self.handle_editing_path()
-
-
-
-
-
-
-
-
 
 
 
