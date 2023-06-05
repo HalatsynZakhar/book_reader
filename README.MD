@@ -10,6 +10,7 @@ Available options:
 * Play the current sentence at 2 different speeds
 * dark theme and light theme (the ability to fully customize the interface)
 * display current page and progress (optional)
+* search history available
 * document navigation
 * reading any .txt or .fb2 document on computer
 * Save all settings and bookmark all documents ever opened
