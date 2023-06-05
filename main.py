@@ -445,14 +445,19 @@ class MyWindow(QWidget):
 
 
     def get_musinfo(self, lyrict_title_list):
+        print("get_muzinfo")
         # Проверяем, есть ли данные в кеше
         if lyrict_title_list in self.cache_Music:
             return self.cache_Music[lyrict_title_list]
 
-        # URL страницы с текстом песни
-        url = 'https://ru.musinfo.net/lyrics/{}'.format("/".join(lyrict_title_list))
-
         try:
+            index_of_dash = lyrict_title_list.index("-")
+            group_and_music = ("-".join(lyrict_title_list[:index_of_dash]), "-".join(
+            lyrict_title_list[index_of_dash + 1:]))
+
+            # URL страницы с текстом песни
+            url = 'https://ru.musinfo.net/lyrics/{}'.format("/".join(group_and_music))
+
             # Отправляем GET-запрос на сервер
             response = requests.get(url)
 
@@ -477,14 +482,18 @@ class MyWindow(QWidget):
 
 
     def get_muztext(self, lyrict_title_list):
+        print("get_muztext")
         # Проверяем, есть ли данные в кеше
         if lyrict_title_list in self.cache_Music:
             return self.cache_Music[lyrict_title_list]
 
-        # URL страницы с текстом песни
-        url = 'https://muztext.com/lyrics/{}'.format("-".join(lyrict_title_list))
-
         try:
+            index_of_dash = lyrict_title_list.index("-")
+            lyrict_title_list = lyrict_title_list[:index_of_dash] + lyrict_title_list[index_of_dash + 1:]
+
+            # URL страницы с текстом песни
+            url = 'https://muztext.com/lyrics/{}'.format("-".join(lyrict_title_list))
+
             # Отправляем GET-запрос на сервер
             response = requests.get(url)
 
@@ -524,7 +533,7 @@ class MyWindow(QWidget):
 
         if self.text == "":
             self.text += self.google_Translate_to_orig_with_Eng(
-                "The song was not found. Try again. Input format: <artist> <title>. Search example: ") + "dynazty waterfall"
+                "The song was not found. Try again. Input format: <artist> - <title>. Search example: ") + "dynazty - waterfall"
             self.count = 0
             self.bookmark = 0
         else:
@@ -813,11 +822,6 @@ class MyWindow(QWidget):
         self.stop_flag = threading.Event()
         thread = AudioThread(self.list_sentences[self.count], self.switch_audio_slow.isChecked(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
         thread.start()
-
-
-
-
-
 
     def center(self, state):
         if state == Qt.Checked:
