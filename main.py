@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 
+import chardet
 import requests
 from bs4 import BeautifulSoup
 
@@ -724,29 +725,42 @@ class MyWindow(QWidget):
 
     def read_txt(self):
         self.text = ""
+
+        encodings = ['utf-8', 'windows-1251', 'iso-8859-1']
         try:
-            # Load text based on file extension
-            if self.last_book.endswith('.txt'):
-                with open(self.last_book, 'r', encoding='windows-1251') as f:
-                    self.text = f.read()
-            elif self.last_book.endswith('.fb2'):
-                # Открываем файл
-                with open(self.last_book, 'rb') as file:
-                    # Читаем содержимое файла
-                    fb2_data = file.read()
-
-                # Парсим содержимое файла
-                root = etree.fromstring(fb2_data)
-
-                # Получаем текст книги
-                text = ''
-                for paragraph in root.iter('{http://www.gribuser.ru/xml/fictionbook/2.0}p'):
-                    if paragraph.text is not None:
-                        text += paragraph.text.strip() + ' '
-                    text += "\n\n"
-                self.text = text
+            # Определяем кодировку файла
+            with open(self.last_book, 'rb') as f:
+                result = chardet.detect(f.read())
+                encoding = result['encoding']
+                encodings.insert(0, encoding)
         except:
             pass
+
+        for encoding in encodings:
+            try:
+                # Load text based on file extension
+                if self.last_book.endswith('.txt'):
+                    with open(self.last_book, 'r', encoding=encoding) as f:
+                        self.text = f.read()
+                elif self.last_book.endswith('.fb2'):
+                    # Открываем файл
+                    with open(self.last_book, 'rb') as file:
+                        # Читаем содержимое файла
+                        fb2_data = file.read()
+
+                    # Парсим содержимое файла
+                    root = etree.fromstring(fb2_data)
+
+                    # Получаем текст книги
+                    text = ''
+                    for paragraph in root.iter('{http://www.gribuser.ru/xml/fictionbook/2.0}p'):
+                        if paragraph.text is not None:
+                            text += paragraph.text.strip() + ' '
+                        text += "\n\n"
+                    self.text = text
+                break
+            except:
+                pass
 
         if self.last_book in self.bookmarks_book:
             self.bookmark, self.count = self.bookmarks_book[self.last_book]
