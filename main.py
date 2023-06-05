@@ -533,7 +533,7 @@ class MyWindow(QWidget):
 
         if self.text == "":
             self.text += self.google_Translate_to_orig_with_Eng(
-                "The song was not found. Try again. Input format: <artist> - <title>. Search example: ") + "dynazty - waterfall"
+                "The song was not found. Try again. Input format: <artist> - <title>. Search example:") + " dynazty - waterfall"
             self.count = 0
             self.bookmark = 0
         else:
