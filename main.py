@@ -245,19 +245,25 @@ class MyWindow(QWidget):
         self.button_navigator.setShortcut("O")
         path_to_file_layout.addWidget(self.button_navigator)
 
+        self.select_bookmark_button = QPushButton(self.google_Translate_init("search history"), self)
+        path_to_file_layout.addWidget(self.select_bookmark_button)
+
         # создаем маленький горизонтальный лейаут
-        original_lang_layout = QHBoxLayout()
-        main_layout.addLayout(original_lang_layout)
+        find_song_layout = QHBoxLayout()
+        main_layout.addLayout(find_song_layout)
 
         # создаем label
         self.find_song_label = QLabel(self.google_Translate_init("Find song: "))
-        original_lang_layout.addWidget(self.find_song_label)
+        find_song_layout.addWidget(self.find_song_label)
 
         # создаем input поле и добавляем его в горизонтальный лейаут
         self.input_find_songs = QLineEdit()
-        original_lang_layout.addWidget(self.input_find_songs)
+        find_song_layout.addWidget(self.input_find_songs)
         self.input_find_songs.setAlignment(QtCore.Qt.AlignCenter)
         self.input_find_songs.setMaxLength(100)
+
+        self.select_bookmark_song_button = QPushButton(self.google_Translate_init("search history"), self)
+        find_song_layout.addWidget(self.select_bookmark_song_button)
 
         # устанавливаем вертикальный лейаут в качестве главного лейаута окна
         self.setLayout(main_layout)
@@ -267,6 +273,8 @@ class MyWindow(QWidget):
         self.language_combo_original.currentIndexChanged.connect(self.language_changed_original)
         self.language_combo_translate.currentIndexChanged.connect(self.language_changed_translate)
 
+        self.select_bookmark_song_button.clicked.connect(self.select_bookmark_song)
+        self.select_bookmark_button.clicked.connect(self.select_bookmark)
         self.next_button.clicked.connect(self.next_button_clicked)
         self.next_next_button.clicked.connect(self.next_next_button_clicked)
         self.previous_button.clicked.connect(self.prev_button_clicked)
@@ -300,6 +308,50 @@ class MyWindow(QWidget):
             self.setWindowTitle("{}".format(self.last_book))
         if self.active_mode == "song":
             self.setWindowTitle(" ".join(self.last_song))
+
+    def select_bookmark_song(self):
+        bookmarks_list_song = QComboBox(self)
+        history_sort = sorted(list([" ".join(i) for i in self.bookmarks_song.keys()]))
+        bookmarks_list_song.addItems(history_sort)
+
+        index = bookmarks_list_song.findText(" ".join(self.last_song))
+        bookmarks_list_song.setCurrentIndex(index)
+
+        bookmarks_list_song.currentIndexChanged.connect(lambda: self.handle_bookmark_selection_song(bookmarks_list_song))
+        bookmarks_list_song.showPopup()
+
+    def handle_bookmark_selection_song(self, bookmark_list_song):
+        selected_bookmark_song = bookmark_list_song.currentText()
+        self.input_find_songs.setText(selected_bookmark_song)
+        self.handle_editing_song()
+
+    def select_bookmark(self):
+        bookmarks_list = QComboBox(self)
+        history_sort = sorted(list(self.bookmarks_book.keys()))
+        bookmarks_list.addItems(history_sort)
+
+        index = bookmarks_list.findText(self.last_book)
+        bookmarks_list.setCurrentIndex(index)
+
+        bookmarks_list.currentIndexChanged.connect(lambda: self.handle_bookmark_selection(bookmarks_list))
+        bookmarks_list.showPopup()
+
+    def handle_bookmark_selection(self, bookmark_list):
+        selected_bookmark = bookmark_list.currentText()
+        self.input_path_to_file.setText(selected_bookmark)
+        self.handle_editing_path()
+
+
+
+
+
+
+
+
+
+
+
+
 
     def open_settings_dialog(self):
         # Создаем диалоговое окно настроек интерфейса
@@ -399,6 +451,9 @@ class MyWindow(QWidget):
         path_to_file_label_text = self.google_Translate_to_trans_with_eng("Path to file: ")
         find_song_label_text = self.google_Translate_to_trans_with_eng("Find song: ")
         button_navigator_text = self.google_Translate_to_trans_with_eng("Open file") + " (O)"
+        select_bookmark = self.google_Translate_to_trans_with_eng("Search history")
+        select_bookmark_song = self.google_Translate_to_trans_with_eng("Search history")
+
 
         self.previous_button.setText(previous_button_text)
         self.prev_prev_button.setText(prev_prev_button_text)
@@ -419,6 +474,8 @@ class MyWindow(QWidget):
         self.path_to_file_label.setText(path_to_file_label_text)
         self.find_song_label.setText(find_song_label_text)
         self.button_navigator.setText(button_navigator_text)
+        self.select_bookmark_button.setText(select_bookmark)
+        self.select_bookmark_song_button.setText(select_bookmark_song)
 
         self.translate_dialog_windows = [self.google_Translate_to_trans_with_eng(i) for i in
                                          self.orgignal_dialog_window]
