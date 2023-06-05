@@ -923,20 +923,20 @@ class MyWindow(QWidget):
 
         return text
 
-    def out(self, text, end="\n"):
-        self.text_browser.insertHtml(self.filter_text(text + end))
+    def out(self, text, end_space="\n"):
+        self.text_browser.insertHtml(self.filter_text(text + end_space))
 
-    def out_marker1(self, text, end="\n"):
+    def out_marker1(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.filter_text(text + end)))
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[13].name(), self.filter_text(text + end)))
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[13].name(), self.filter_text(text + end_space)))
 
-    def out_marker2(self, text, end="\n"):
+    def out_marker2(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[14].name(), self.filter_text(text + end)))
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[14].name(), self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.filter_text(text + end)))
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.filter_text(text + end_space)))
 
     def scan_sentence(self, text):
         sentences = nltk.sent_tokenize(text)
@@ -952,7 +952,7 @@ class MyWindow(QWidget):
             Указывает на смену темы"""
             self.currentParagraph = self.currentParagraph[1::]
             if not self.switch_center.isChecked():
-                self.out("\t", end="")
+                self.out("\t", end_space="")
             self.out_marker2("***")
 
         self.list_sentences = self.scan_sentence(self.currentParagraph)
@@ -966,37 +966,38 @@ class MyWindow(QWidget):
     def output_paragraph(self):
         if self.bookmark == 0:
             if not self.switch_center.isChecked():
-                self.out("\t", end="")
+                self.out("\t", "")
             self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text") + "\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
 
         if not self.switch_center.isChecked():
-            self.out("\t", end="")
+            self.out("\t", "")
 
         for i in range(len(self.list_sentences)):
             if self.count == i:
-                self.out_marker1(self.list_sentences[i], end=" ")
+                self.out_marker1(self.list_sentences[i], " ")
             else:
-                self.out(self.list_sentences[i], end=" ")
-
+                self.out(self.list_sentences[i], " ")
 
         self.out("\n")
 
         if not self.switch_center.isChecked():
-            self.out("\t", end="")
+            self.out("\t", "")
 
         for i in range(len(self.list_sentences_trans)):
             if self.count == i:
-                self.out_marker1(self.list_sentences_trans[i], end=" ")
+                self.out_marker1(self.list_sentences_trans[i], " ")
             else:
-                self.out(self.list_sentences_trans[i], end=" ")
+                self.out(self.list_sentences_trans[i], " ")
+
+        self.out("\n")
 
         if self.bookmark == len(self.list_paragraph) - 1:
 
             if not self.switch_center.isChecked():
-                self.out("\t", end="")
-            self.out_marker2("\n\n" + self.google_Translate_to_orig_with_Eng("End of text"))
+                self.out("\t", "")
+            self.out_marker2("\n" + self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
             current_thread = threading.Thread(target=self.repeat_clicked)
