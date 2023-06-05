@@ -963,20 +963,18 @@ class MyWindow(QWidget):
 
     def output_paragraph(self):
         if self.bookmark == 0:
-            self.text_browser.append("\t")
+
             self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text") + "\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
 
-        self.text_browser.append("\t")
+
 
         for i in range(len(self.list_sentences)):
             if self.count == i:
                 self.out_marker1(self.list_sentences[i], end=" ")
             else:
                 self.out(self.list_sentences[i], end=" ")
-
-        self.text_browser.append("\n\t")
 
         for i in range(len(self.list_sentences_trans)):
             if self.count == i:
@@ -985,7 +983,7 @@ class MyWindow(QWidget):
                 self.out(self.list_sentences_trans[i], end=" ")
 
         if self.bookmark == len(self.list_paragraph) - 1:
-            self.text_browser.append("\t")
+
             self.out_marker2("\n\n" + self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
