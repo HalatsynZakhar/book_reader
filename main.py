@@ -67,12 +67,12 @@ class MyWindow(QWidget):
 
         # создаем кнопку "prev prev" и добавляем ее в горизонтальный лейаут
         self.prev_prev_button = QPushButton(self.google_Translate_init("Previous paragraph") + " (Ctrl+Left)")
-        self.prev_prev_button.setShortcut(self.google_Translate_init("Ctrl+Left"))
+        self.prev_prev_button.setShortcut("Ctrl+Left")
         prev_buttons_layout.addWidget(self.prev_prev_button)
 
         # создаем кнопку "previous" и добавляем ее в горизонтальный лейаут
         self.previous_button = QPushButton(self.google_Translate_init("Previous") + " (Left)")
-        self.previous_button.setShortcut(self.google_Translate_init("Left"))
+        self.previous_button.setShortcut("Left")
         prev_buttons_layout.addWidget(self.previous_button)
 
         choice_lang_and_font_layout = QVBoxLayout()
@@ -86,42 +86,8 @@ class MyWindow(QWidget):
         original_lang_layout.addWidget(self.lang_of_study_label)
 
         self.language_combo_original = QComboBox()
-        self.language_combo_original.addItem("Azərbaycan dili", "az")
-        self.language_combo_original.addItem("Bahasa Indonesia", "id")
-        self.language_combo_original.addItem("Bosanski", "bs")
-        self.language_combo_original.addItem("Català", "ca")
-        self.language_combo_original.addItem("Čeština", "cs")
-        self.language_combo_original.addItem("Dansk", "da")
-        self.language_combo_original.addItem("Deutsch", "de")
-        self.language_combo_original.addItem("Eesti", "et")
-        self.language_combo_original.addItem("English", "en")
-        self.language_combo_original.addItem("Español", "es")
-        self.language_combo_original.addItem("Filipino", "tl")
-        self.language_combo_original.addItem("Français", "fr")
-        self.language_combo_original.addItem("Galego", "gl")
-        self.language_combo_original.addItem("Greek", "el")
-        self.language_combo_original.addItem("Hrvatski", "hr")
-        self.language_combo_original.addItem("Italiano", "it")
-        self.language_combo_original.addItem("Kiswahili", "sw")
-        self.language_combo_original.addItem("Latviešu", "lv")
-        self.language_combo_original.addItem("Lietuvių", "lt")
-        self.language_combo_original.addItem("Magyar", "hu")
-        self.language_combo_original.addItem("Македонски", "mk")
-        self.language_combo_original.addItem("Nederlands", "nl")
-        self.language_combo_original.addItem("Norsk", "no")
-        self.language_combo_original.addItem("Polski", "pl")
-        self.language_combo_original.addItem("Português", "pt")
-        self.language_combo_original.addItem("Română", "ro")
-        self.language_combo_original.addItem("Русский", "ru")
-        self.language_combo_original.addItem("Serbian", "sr")
-        self.language_combo_original.addItem("Slovenčina", "sk")
-        self.language_combo_original.addItem("Slovenščina", "sl")
-        self.language_combo_original.addItem("Suomi", "fi")
-        self.language_combo_original.addItem("Svenska", "sv")
-        self.language_combo_original.addItem("Tiếng Việt", "vi")
-        self.language_combo_original.addItem("Türkçe", "tr")
-        self.language_combo_original.addItem("Українська", "uk")
-
+        for language, code in self.languages.items():
+            self.language_combo_original.addItem(language, code)
         original_lang_layout.addWidget(self.language_combo_original)
 
         index = self.language_combo_original.findData(self.default_language_orig)
@@ -135,42 +101,8 @@ class MyWindow(QWidget):
         translate_lang_layout.addWidget(self.choice_trans_lang_label)
 
         self.language_combo_translate = QComboBox()
-        self.language_combo_translate.addItem("Azərbaycan dili", "az")
-        self.language_combo_translate.addItem("Bahasa Indonesia", "id")
-        self.language_combo_translate.addItem("Български", "bg")
-        self.language_combo_translate.addItem("Català", "ca")
-        self.language_combo_translate.addItem("Čeština", "cs")
-        self.language_combo_translate.addItem("Dansk", "da")
-        self.language_combo_translate.addItem("Deutsch", "de")
-        self.language_combo_translate.addItem("Eesti", "et")
-        self.language_combo_translate.addItem("English", "en")
-        self.language_combo_translate.addItem("Español", "es")
-        self.language_combo_translate.addItem("Filipino", "tl")
-        self.language_combo_translate.addItem("Français", "fr")
-        self.language_combo_translate.addItem("Galego", "gl")
-        self.language_combo_translate.addItem("Greek", "el")
-        self.language_combo_translate.addItem("Hrvatski", "hr")
-        self.language_combo_translate.addItem("Italiano", "it")
-        self.language_combo_translate.addItem("Kiswahili", "sw")
-        self.language_combo_translate.addItem("Latviešu", "lv")
-        self.language_combo_translate.addItem("Lietuvių", "lt")
-        self.language_combo_translate.addItem("Magyar", "hu")
-        self.language_combo_translate.addItem("Македонски", "mk")
-        self.language_combo_translate.addItem("Nederlands", "nl")
-        self.language_combo_translate.addItem("Norsk", "no")
-        self.language_combo_translate.addItem("Polski", "pl")
-        self.language_combo_translate.addItem("Português", "pt")
-        self.language_combo_translate.addItem("Română", "ro")
-        self.language_combo_translate.addItem("Русский", "ru")
-        self.language_combo_translate.addItem("Српски", "sr")
-        self.language_combo_translate.addItem("Slovenčina", "sk")
-        self.language_combo_translate.addItem("Slovenščina", "sl")
-        self.language_combo_translate.addItem("Suomi", "fi")
-        self.language_combo_translate.addItem("Svenska", "sv")
-        self.language_combo_translate.addItem("Tiếng Việt", "vi")
-        self.language_combo_translate.addItem("Türkçe", "tr")
-        self.language_combo_translate.addItem("Українська", "uk")
-
+        for language, code in self.languages.items():
+            self.language_combo_translate.addItem(language, code)
         translate_lang_layout.addWidget(self.language_combo_translate)
 
         index = self.language_combo_translate.findData(self.default_language_trans)
@@ -282,12 +214,12 @@ class MyWindow(QWidget):
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         self.next_next_button = QPushButton(self.google_Translate_init("next paragraph") + " (Ctrl+Right)")
-        self.next_next_button.setShortcut(self.google_Translate_init("Ctrl+Right"))
+        self.next_next_button.setShortcut("Ctrl+Right")
         next_next_layout.addWidget(self.next_next_button)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         self.next_button = QPushButton(self.google_Translate_init("next sentence") + " (Right)")
-        self.next_button.setShortcut(self.google_Translate_init("Right"))
+        self.next_button.setShortcut("Right")
         next_next_layout.addWidget(self.next_button)
 
         # добавляем горизонтальный лейаут в вертикальный лейаут
@@ -578,6 +510,45 @@ class MyWindow(QWidget):
 
         self.settings = QSettings("halatsyn_zakhar", "book_reader")
 
+        self.languages = {
+            "Azərbaycan dili": "az",
+            "Bahasa Indonesia": "id",
+            "Bosanski": "bs",
+            "Català": "ca",
+            "Čeština": "cs",
+            "Dansk": "da",
+            "Deutsch": "de",
+            "Eesti": "et",
+            "English": "en",
+            "Español": "es",
+            "Filipino": "tl",
+            "Français": "fr",
+            "Galego": "gl",
+            "Greek": "el",
+            "Hrvatski": "hr",
+            "Italiano": "it",
+            "Kiswahili": "sw",
+            "Latviešu": "lv",
+            "Lietuvių": "lt",
+            "Magyar": "hu",
+            "Македонски": "mk",
+            "Nederlands": "nl",
+            "Norsk": "no",
+            "Polski": "pl",
+            "Português": "pt",
+            "Română": "ro",
+            "Русский": "ru",
+            "Serbian": "sr",
+            "Slovenčina": "sk",
+            "Slovenščina": "sl",
+            "Suomi": "fi",
+            "Svenska": "sv",
+            "Tiếng Việt": "vi",
+            "Türkçe": "tr",
+            "Українська": "uk"
+        }
+
+
         self.night_mode_default = (QColor(53, 53, 53),
                                    QColor(255, 255, 255),
                                    QColor(25, 25, 25),
@@ -725,7 +696,7 @@ class MyWindow(QWidget):
     def handle_editing_finished(self):
         # обработчик событий, который будет вызываться при изменении поля
         self.count = 0
-        self.bookmark = int(self.input_field.text())
+        self.bookmark = int(self.input_field.text()) - 1
 
         self.input_field.clearFocus()
         self.input_field.clear()
@@ -814,7 +785,7 @@ class MyWindow(QWidget):
             current_thread.start()
         else:
             # Выключить аудио
-            pygame.quit()
+            self.stop_flag.set()
 
     def google_Translate_to_trans_with_random_lang(self, text):
         """Переводит реальные абзацы, исходный язык неизвестен, реузльтат тоже
@@ -1018,16 +989,15 @@ class MyWindow(QWidget):
 
         self.hide_curren_and_all_page()
 
-        if self.bookmark != 0 or self.count != 0:
-            if self.active_mode == "book":
-                self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
-            elif self.active_mode == "song":
-                self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
+        if self.active_mode == "book" and self.last_book in self.bookmarks_book:
+            self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
+        elif self.active_mode == "song" and self.last_song in self.bookmarks_song:
+            self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
         self.save_settings()
 
 
         # устанавливаем валидатор для ограничения ввода только целых чисел
-        validator = QIntValidator(0, len(self.list_paragraph) - 1, self)
+        validator = QIntValidator(1, len(self.list_paragraph), self)
         self.input_field.setValidator(validator)
 
         if self.switch_center.isChecked():
@@ -1063,7 +1033,7 @@ class MyWindow(QWidget):
         # вызываем метод save() перед закрытием окна
         self.save_settings()
         self.translator.save_cache_to_settings()
-        pygame.close()
+
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)
 
