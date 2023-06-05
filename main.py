@@ -58,6 +58,9 @@ class MyWindow(QWidget):
         font.setPointSize(self.fontSize)
         self.text_browser.setFont(font)
 
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.text_browser.toPlainText())
+
         # создаем горизонтальный лейаут
         horizontal_layout = QHBoxLayout()
 
@@ -569,15 +572,12 @@ class MyWindow(QWidget):
         if self.text == "":
             self.text = self.get_musinfo(self.last_song)
 
-
-
-
         if self.last_song in self.bookmarks_song:
             self.bookmark, self.count = self.bookmarks_song[self.last_song]
         else:
             """Песня новая"""
             if self.text != "":
-                """если книга существует, добавляем запись, создаем закладки"""
+                """если песня существует, добавляем запись, создаем закладки"""
                 self.bookmarks_song[self.last_song] = (0, 0)
                 self.bookmark, self.count = self.bookmarks_song[self.last_song]
             else:

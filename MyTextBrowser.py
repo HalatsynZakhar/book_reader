@@ -33,5 +33,9 @@ class MyTextBrowser(QTextBrowser):
             font_size = max(self.min_font_size, min(self.max_font_size, font_size))
             font.setPointSize(font_size)
             self.setFont(font)
+            if event.key() == QtCore.Qt.Key_C:
+                self.copy()
+            elif event.key() == QtCore.Qt.Key_X:
+                self.cut()
         else:
             super().keyPressEvent(event)
