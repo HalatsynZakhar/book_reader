@@ -102,10 +102,8 @@ class MyWindow(QWidget):
         translate_lang_layout.addWidget(self.choice_trans_lang_label)
 
         self.language_combo_translate = QComboBox()
-
         for language, code in self.languages.items():
             self.language_combo_translate.addItem(language, code)
-
         translate_lang_layout.addWidget(self.language_combo_translate)
 
         index = self.language_combo_translate.findData(self.default_language_trans)
@@ -781,6 +779,8 @@ class MyWindow(QWidget):
         else:
             self.text_browser.setAlignment(QtCore.Qt.AlignLeft)
 
+        self.formint_output_text()
+
     def audio_switch(self, state):
         if state == Qt.Checked:
             current_thread = threading.Thread(target=self.repeat_clicked)
@@ -918,7 +918,7 @@ class MyWindow(QWidget):
         # заменяем символы переноса строки на тег <br>
         text = text.replace('\n', '<br>')
         # заменяем символы табуляции на тег <pre>
-        text = text.replace('\t', '<pre>')
+        text = text.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
         # заменяем пробелы в конце предложений
 
         return text
@@ -951,6 +951,8 @@ class MyWindow(QWidget):
             """Обработка исключения, когда вначале лишний перевод строки
             Указывает на смену темы"""
             self.currentParagraph = self.currentParagraph[1::]
+            if not self.switch_center.isChecked():
+                self.out("\t", end="")
             self.out_marker2("***")
 
         self.list_sentences = self.scan_sentence(self.currentParagraph)
@@ -963,18 +965,26 @@ class MyWindow(QWidget):
 
     def output_paragraph(self):
         if self.bookmark == 0:
-
+            if not self.switch_center.isChecked():
+                self.out("\t", end="")
             self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text") + "\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
 
-
+        if not self.switch_center.isChecked():
+            self.out("\t", end="")
 
         for i in range(len(self.list_sentences)):
             if self.count == i:
                 self.out_marker1(self.list_sentences[i], end=" ")
             else:
                 self.out(self.list_sentences[i], end=" ")
+
+
+        self.out("\n")
+
+        if not self.switch_center.isChecked():
+            self.out("\t", end="")
 
         for i in range(len(self.list_sentences_trans)):
             if self.count == i:
@@ -984,6 +994,8 @@ class MyWindow(QWidget):
 
         if self.bookmark == len(self.list_paragraph) - 1:
 
+            if not self.switch_center.isChecked():
+                self.out("\t", end="")
             self.out_marker2("\n\n" + self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
@@ -992,8 +1004,7 @@ class MyWindow(QWidget):
 
         self.hide_curren_and_all_page()
 
-
-        if self.active_mode == "book" and self.last_book and self.last_book in self.bookmarks_book:
+        if self.active_mode == "book" and self.last_book in self.bookmarks_book:
             self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
         elif self.active_mode == "song" and self.last_song in self.bookmarks_song:
             self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
@@ -1037,6 +1048,7 @@ class MyWindow(QWidget):
         # вызываем метод save() перед закрытием окна
         self.save_settings()
         self.translator.save_cache_to_settings()
+
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)
 
