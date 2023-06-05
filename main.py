@@ -546,10 +546,10 @@ class MyWindow(QWidget):
 
         try:
             index_of_dash = lyrict_title_list.index("-")
-            lyrict_title_list = lyrict_title_list[:index_of_dash] + lyrict_title_list[index_of_dash + 1:]
+            lyrict_title_and_song = lyrict_title_list[:index_of_dash] + lyrict_title_list[index_of_dash + 1:]
 
             # URL страницы с текстом песни
-            url = 'https://muztext.com/lyrics/{}'.format("-".join(lyrict_title_list))
+            url = 'https://muztext.com/lyrics/{}'.format("-".join(lyrict_title_and_song))
 
             # Отправляем GET-запрос на сервер
             response = requests.get(url)
