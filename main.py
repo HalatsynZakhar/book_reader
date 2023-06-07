@@ -141,8 +141,9 @@ class MyWindow(QWidget):
         if self.audio_enabled:
             self.switch_audio.toggle()
 
-        self.switch_auto_play = QCheckBox(self.google_Translate_init("Autoplay"), self)
+        self.switch_auto_play = QCheckBox(self.google_Translate_init("Autoplay") + " (Space)", self)
         audio_setting_layout.addWidget(self.switch_auto_play)
+        self.switch_auto_play.setShortcut("Space")
         if self.auto_play:
             self.switch_auto_play.toggle()
 
@@ -499,7 +500,7 @@ class MyWindow(QWidget):
         button_navigator_text = self.google_Translate_to_trans_with_eng("Open file") + " (O)"
         select_bookmark = self.google_Translate_to_trans_with_eng("Search history")
         select_bookmark_song = self.google_Translate_to_trans_with_eng("Search history")
-        swith_autoplay = self.google_Translate_to_trans_with_eng("Autoplay")
+        swith_autoplay = self.google_Translate_to_trans_with_eng("Autoplay") + " (Space)"
         playback_speed = self.google_Translate_to_trans_with_eng("Playback speed")
 
         self.spin_box_playback_speed.setText(playback_speed)
@@ -1175,6 +1176,8 @@ class MyWindow(QWidget):
         font.setPointSize(font_size)  # Устанавливаем новый размер шрифта
         self.text_browser.setFont(font)  # Устанавливаем новый шрифт для text_browser
 
+        self.settings.setValue("fontSize", self.text_browser.font().pointSize())
+
     def filter_text(self, text):
         # заменяем спецсимволы на их HTML-эквиваленты
         text = html.escape(text)
@@ -1190,7 +1193,7 @@ class MyWindow(QWidget):
         if self.switch_night_mode.isChecked():
             self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[15].name(), self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[15].name(), self.filter_text(text + end_space)))
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[15].name(), self.filter_text(text + end_space)))
     def out_marker1(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
             self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.filter_text(text + end_space)))
@@ -1289,8 +1292,7 @@ class MyWindow(QWidget):
         print(inspect.currentframe().f_code.co_name)
 
         # Сохранение настроек
-        self.settings.setValue("cache_Music", self.cache_Music),
-        self.settings.setValue("fontSize", self.text_browser.font().pointSize())
+        self.settings.setValue("cache_Music", self.cache_Music)
         self.settings.setValue("window_geometry_x", self.geometry().x())
         self.settings.setValue("window_geometry_y", self.geometry().y())
         self.settings.setValue("window_geometry_width", self.geometry().width())
