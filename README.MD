@@ -7,7 +7,7 @@ Result: Displays text with parallel translation paragraph by paragraph on one pa
 Available options:
 
 * The choice of any 2 languages is available as native and as studied from 36 available
-* Play the current sentence at 2 different speeds
+* Speak text at a specified speed
 * dark theme and light theme (the ability to fully customize the interface)
 * display current page and progress (optional)
 * search history available
@@ -17,6 +17,7 @@ Available options:
 * Auto-tuning interface for the user's native language
 * Translator data is cached to optimize translator usage
 * Customized hotkeys on main keys for ease of use
+* Continuous playback
 
 To get the original lyrics, use the site: https://muztext.com/, https://ru.musinfo.net/
 
@@ -29,12 +30,14 @@ This code used the following libraries:
 * googletrans - to translate text into another language via Google Translate.
 * gtts - for text-to-speech synthesis.
 * html - to convert HTML code to text.
-* lxml - to read fb2 files
+* lxml, chardet - to read fb2 files
 * nltk - Natural Language Toolkit (natural language processing toolkit), i.e. library for text analysis in natural language.
 * os - getting the absolute path of a file
-* pygame - for playing sound files and music.
+* vlc - for playing sound files and music.
 * PyQt5 - for creating a GUI application.
 * sys is for accessing system functions and variables.
+* inspect - debugging
+* requests - get lyrics
 
 How to use?
 
@@ -45,7 +48,7 @@ Create virt env
 * environment activation (Scripts\activate.bat)
 * install dependencies: pip install requests
 * Download files *.py and add to directory name
-* Install the necessary packages for work (pip install requests beautifulsoup4 nltk googletrans==3.1.0a0 gtts pygame PyQt5 lxml)
+* Install the necessary packages for work (pip install requests beautifulsoup4 nltk googletrans==3.1.0a0 gtts python-vlc PyQt5 lxml)
 * Run the program: (python main.py)
 
 For the next run:
