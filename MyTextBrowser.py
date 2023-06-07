@@ -19,6 +19,7 @@ class MyTextBrowser(QTextBrowser):
             font_size = max(self.min_font_size, min(self.max_font_size, font_size))
             font.setPointSize(font_size)
             self.setFont(font)
+
         else:
             super().wheelEvent(event)
 

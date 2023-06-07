@@ -7,21 +7,22 @@ class CachedTranslator(Translator):
         super().__init__()
         self.cache_size = cache_size
         self.cache = {}
-        self.settings = QSettings("halatsyn_zakhar", "book_reader")
 
     def translate(self, text, dest='en', src='auto'):
+        print("translate:", end=" ")
         key = (text, dest, src)
         if key in self.cache:
+            print("cache")
             return self.cache[key]
         result = super().translate(text, dest=dest, src=src)
         if len(self.cache) >= self.cache_size:
             self.cache.popitem()
         self.cache[key] = result.text
-        self.settings.setValue("cache", self.cache)
+        print("google")
         return result.text
 
-    def load_cache_from_settings(self):
-        self.cache = self.settings.value("cache", {})
+    def load_cache_from_settings(self, MyWindow):
+        self.cache = MyWindow.settings.value("cache", {})
 
-    def save_cache_to_settings(self):
-        self.settings.setValue("cache", self.cache)
+    def save_cache_to_settings(self, MyWindow):
+        MyWindow.settings.setValue("cache", self.cache)

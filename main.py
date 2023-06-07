@@ -1,7 +1,9 @@
 import html
+import inspect
 import os
 import sys
 import threading
+
 
 import chardet
 import requests
@@ -24,31 +26,36 @@ from MyTextBrowser import MyTextBrowser
 
 class MyWindow(QWidget):
     def __init__(self):
+        print(inspect.currentframe().f_code.co_name)
+
         super().__init__()
 
         self.lock = threading.Lock()
         pygame.init()
 
         self.stop_flag = None
+
         # Создание экземпляра CachedTranslator
         self.translator = CachedTranslator()
 
-        # Загрузка кеша из QSettings
-        self.translator.load_cache_from_settings()
-
         self.download_settings()
+
+
+
 
         self.create_GUI()
 
+        self.toggle_theme(False)
         # чтение файла (указан путь к примеру файлу txt) и генерация страницы далее
         if self.active_mode == "book":
             self.read_txt()
         elif self.active_mode == "song":
             self.read_song()
 
-        self.toggle_theme()
+
 
     def create_GUI(self):
+        print(inspect.currentframe().f_code.co_name)
         # создаем главный вертикальный лейаут
         main_layout = QVBoxLayout()
 
@@ -287,7 +294,8 @@ class MyWindow(QWidget):
         self.switch_night_mode.stateChanged.connect(lambda: self.toggle_theme())
         self.switch_center.stateChanged.connect(self.center)
         self.switch_audio.stateChanged.connect(self.audio_switch)
-        self.repeat_button.clicked.connect(self.repeat_clicked)
+        self.switch_audio_slow.stateChanged.connect(self.audio_slow_switch)
+        self.repeat_button.clicked.connect(self.play_audio)
         self.settings_button.clicked.connect(self.open_settings_dialog)
 
         # Соединение событий прокрутки колесика мыши и изменения размера шрифта в text_browser
@@ -314,6 +322,8 @@ class MyWindow(QWidget):
             self.setWindowTitle(" ".join(self.last_song))
 
     def select_bookmark_song(self):
+        print(inspect.currentframe().f_code.co_name)
+
         bookmarks_list_song = QComboBox(self)
         history_sort = sorted(list([" ".join(i) for i in self.bookmarks_song.keys()]))
         bookmarks_list_song.addItems(history_sort)
@@ -328,11 +338,15 @@ class MyWindow(QWidget):
         bookmarks_list_song.showPopup()
 
     def handle_bookmark_selection_song(self, bookmark_list_song):
+        print(inspect.currentframe().f_code.co_name)
+
         selected_bookmark_song = bookmark_list_song.currentText()
         self.input_find_songs.setText(selected_bookmark_song)
         self.handle_editing_song()
 
     def select_bookmark(self):
+        print(inspect.currentframe().f_code.co_name)
+
         bookmarks_list = QComboBox(self)
         history_sort = sorted(list(self.bookmarks_book.keys()))
         bookmarks_list.addItems(history_sort)
@@ -347,15 +361,15 @@ class MyWindow(QWidget):
         bookmarks_list.showPopup()
 
     def handle_bookmark_selection(self, bookmark_list):
+        print(inspect.currentframe().f_code.co_name)
+
         selected_bookmark = bookmark_list.currentText()
         self.input_path_to_file.setText(selected_bookmark)
         self.handle_editing_path()
 
-
-
-
-
     def open_settings_dialog(self):
+        print(inspect.currentframe().f_code.co_name)
+
         # Создаем диалоговое окно настроек интерфейса
         self.settings_dialog = QDialog(self)
 
@@ -401,6 +415,8 @@ class MyWindow(QWidget):
         self.settings_dialog.exec_()
 
     def reset_theme(self):
+        print(inspect.currentframe().f_code.co_name)
+
         if self.switch_night_mode.isChecked():
             self.night_mod_colors = [i for i in self.night_mode_default]
         else:
@@ -415,6 +431,8 @@ class MyWindow(QWidget):
                 self.color_buttons[i].setStyleSheet("background-color: {}".format(self.day_mode_colors[i].name()))
 
     def show_color_dialog(self, index):
+        print(inspect.currentframe().f_code.co_name)
+
         # Создаем диалог выбора цвета
         color = QColorDialog.getColor()
         if self.switch_night_mode.isChecked():
@@ -427,12 +445,18 @@ class MyWindow(QWidget):
         # Если цвет был выбран, то устанавливаем его для кнопки
 
     def language_changed_original(self, index):
+        print(inspect.currentframe().f_code.co_name)
+
         if self.active_mode == "book":
             self.read_txt()
         elif self.active_mode == "song":
             self.read_song()
 
+        self.settings.setValue("default_language_orig", self.language_combo_original.currentData())
+
     def change_language(self):
+        print(inspect.currentframe().f_code.co_name)
+
         """Эта функция выполняется отдельным потоком при изменении языка интерфейса"""
         previous_button_text = self.google_Translate_to_trans_with_eng("Previous paragraph") + " (Ctrl+Left)"
         prev_prev_button_text = self.google_Translate_to_trans_with_eng("Previous") + " (Left)"
@@ -483,6 +507,8 @@ class MyWindow(QWidget):
                                          self.orgignal_dialog_window]
 
     def language_changed_translate(self, index):
+        print(inspect.currentframe().f_code.co_name)
+
         thread = threading.Thread(target=self.change_language)
         thread.start()
 
@@ -490,9 +516,11 @@ class MyWindow(QWidget):
         # сохраняем язык перевода в конфигурационный файл
         # и обновляем настройки в вашем приложении
 
-
+        self.settings.setValue("default_language_trans", self.language_combo_translate.currentData())
 
     def select_file(self):
+        print(inspect.currentframe().f_code.co_name)
+
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(self, self.google_Translate_to_trans_with_eng("Open File"), "",
@@ -504,9 +532,11 @@ class MyWindow(QWidget):
 
 
     def get_musinfo(self, lyrict_title_list):
-        print("get_muzinfo")
+        print(inspect.currentframe().f_code.co_name + ": ", end=" ")
+
         # Проверяем, есть ли данные в кеше
         if lyrict_title_list in self.cache_Music:
+            print("cache")
             return self.cache_Music[lyrict_title_list]
 
         try:
@@ -537,15 +567,17 @@ class MyWindow(QWidget):
             self.cache_Music[lyrict_title_list] = text_result
         except:
             return ""
+        print("musinfo")
         return text_result
 
 
     def get_muztext(self, lyrict_title_list):
-        print("get_muztext")
+        print(inspect.currentframe().f_code.co_name + ": ", end=" ")
+
         # Проверяем, есть ли данные в кеше
         if lyrict_title_list in self.cache_Music:
+            print("cache")
             return self.cache_Music[lyrict_title_list]
-
         try:
             index_of_dash = lyrict_title_list.index("-")
             lyrict_title_and_song = lyrict_title_list[:index_of_dash] + lyrict_title_list[index_of_dash + 1:]
@@ -566,9 +598,12 @@ class MyWindow(QWidget):
             self.cache_Music[lyrict_title_list] = lyrics.text
         except:
             return ""
+        print("lyrics.text")
         return lyrics.text
 
     def read_song(self):
+        print(inspect.currentframe().f_code.co_name)
+
         self.text = self.get_muztext(self.last_song)
         if self.text == "":
             self.text = self.get_musinfo(self.last_song)
@@ -598,11 +633,27 @@ class MyWindow(QWidget):
         temp_list = self.text.split("(оригинал)")
         self.list_paragraph = temp_list[-1].split("\n")
         self.list_paragraph = [x for x in self.list_paragraph if x]
+
+        # устанавливаем валидатор для ограничения ввода только целых чисел
+        validator = QIntValidator(1, len(self.list_paragraph), self)
+        self.input_field.setValidator(validator)
+
+
+
+
+
+
         self.formint_output_text()
 
+
+
     def download_settings(self):
+        print(inspect.currentframe().f_code.co_name)
 
         self.settings = QSettings("halatsyn_zakhar", "book_reader")
+
+        # Загрузка кеша из QSettings
+        self.translator.load_cache_from_settings(self)
 
         self.languages = {
             "Azərbaycan dili": "az",
@@ -724,6 +775,8 @@ class MyWindow(QWidget):
         self.translate_dialog_windows = [self.google_Translate_init(i) for i in self.orgignal_dialog_window]
 
     def read_txt(self):
+        print(inspect.currentframe().f_code.co_name)
+
         self.text = ""
 
         encodings = ['utf-8', 'windows-1251', 'iso-8859-1']
@@ -788,13 +841,21 @@ class MyWindow(QWidget):
             self.input_path_to_file.clear()
         self.list_paragraph = self.text.split("\n\n")
         self.list_paragraph = [x for x in self.list_paragraph if x]
+
+        # устанавливаем валидатор для ограничения ввода только целых чисел
+        validator = QIntValidator(1, len(self.list_paragraph), self)
+        self.input_field.setValidator(validator)
+
         self.formint_output_text()
     def handle_editing_song(self):
+        print(inspect.currentframe().f_code.co_name)
+
         self.active_mode = "song"
         if self.input_find_songs.text() != "":
             text_fil = self.input_find_songs.text().replace("'", " ")
             find_text_filtered = tuple(filter(lambda x: x != '', map(str.lower, text_fil.split())))
             self.last_song = find_text_filtered
+            self.settings.setValue("last_song", self.last_song)
 
         self.input_find_songs.setPlaceholderText("{}".format(" ".join(self.last_song)))
         self.setWindowTitle("{}".format(" ".join(self.last_song)))
@@ -802,7 +863,10 @@ class MyWindow(QWidget):
         self.input_find_songs.clearFocus()
 
         self.read_song()
+        self.settings.setValue("active_mode", self.active_mode)
     def handle_editing_path(self):
+        print(inspect.currentframe().f_code.co_name)
+
         self.active_mode = "book"
         if self.input_path_to_file.text() != "":
             path = self.input_path_to_file.text()
@@ -810,15 +874,18 @@ class MyWindow(QWidget):
             absolute_path = os.path.abspath(path)
 
             self.last_book = absolute_path
-
+            self.settings.setValue("last_book", self.last_book)
         self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
         self.setWindowTitle("{}".format(self.last_book))
 
         self.input_path_to_file.clearFocus()
 
         self.read_txt()
+        self.settings.setValue("active_mode", self.active_mode)
 
     def handle_editing_finished(self):
+        print(inspect.currentframe().f_code.co_name)
+
         # обработчик событий, который будет вызываться при изменении поля
         self.count = 0
         self.bookmark = int(self.input_field.text()) - 1
@@ -829,6 +896,8 @@ class MyWindow(QWidget):
         self.formint_output_text()
 
     def hide_curren_and_all_page(self):
+        print(inspect.currentframe().f_code.co_name)
+
         if self.switch_Hide_current_page.isChecked():
             self.current_page_label.setText(str(self.bookmark + 1))
             if self.switch_Hide_all_pages.isChecked():
@@ -847,6 +916,8 @@ class MyWindow(QWidget):
                 self.input_field.setPlaceholderText("? / ?")
 
     def hide_curren_page(self, state):
+        print(inspect.currentframe().f_code.co_name)
+
         if state == Qt.Checked:
             self.current_page_label.setText(str(self.bookmark + 1))
             if self.switch_Hide_all_pages.isChecked():
@@ -860,20 +931,24 @@ class MyWindow(QWidget):
             else:
                 self.input_field.setPlaceholderText("? / ?")
 
+        self.settings.setValue("view_current_page", self.switch_Hide_current_page.isChecked())
     def hide_all_pages(self, state):
+        print(inspect.currentframe().f_code.co_name)
+
         if state == Qt.Checked:
-            self.all_pages_label.setText(str(len(self.list_paragraph) - 1))
+            self.all_pages_label.setText(str(len(self.list_paragraph)))
             if self.switch_Hide_current_page.isChecked():
-                self.input_field.setPlaceholderText("{} / {}".format(self.bookmark, len(self.list_paragraph) - 1))
+                self.input_field.setPlaceholderText("{} / {}".format(self.bookmark + 1, len(self.list_paragraph)))
             else:
-                self.input_field.setPlaceholderText("? / {}".format(len(self.list_paragraph) - 1))
+                self.input_field.setPlaceholderText("? / {}".format(len(self.list_paragraph)))
         else:
             self.all_pages_label.setText(("?"))
             if self.switch_Hide_current_page.isChecked():
-                self.input_field.setPlaceholderText("{} / ?".format(self.bookmark))
+                self.input_field.setPlaceholderText("{} / ?".format(self.bookmark + 1))
             else:
                 self.input_field.setPlaceholderText("? / ?")
 
+        self.settings.setValue("view_all_pages", self.switch_Hide_all_pages.isChecked())
     def event(self, event):
         # Проверяем, что произошло событие колеса мыши с зажатой клавишей Ctrl
         if event.type() == QEvent.Wheel and event.modifiers() == Qt.ControlModifier:
@@ -883,7 +958,8 @@ class MyWindow(QWidget):
 
         return super().event(event)
 
-    def repeat_clicked(self):
+    def play_audio(self):
+        print(inspect.currentframe().f_code.co_name)
 
         if self.stop_flag != None:
             # остановка генерации аудиофайла при переключении на следующее предложение
@@ -894,20 +970,35 @@ class MyWindow(QWidget):
         thread.start()
 
     def center(self, state):
+        print(inspect.currentframe().f_code.co_name)
         if state == Qt.Checked:
             self.text_browser.setAlignment(QtCore.Qt.AlignCenter)
         else:
             self.text_browser.setAlignment(QtCore.Qt.AlignLeft)
 
-        self.formint_output_text()
+        self.output_paragraph()
+        self.settings.setValue("center_setting", self.switch_center.isChecked())
+
+    def audio_slow_switch(self, state):
+        print(inspect.currentframe().f_code.co_name)
+
+        if self.switch_audio.isChecked():
+            current_thread = threading.Thread(target=self.play_audio)
+            current_thread.start()
+
+        self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
 
     def audio_switch(self, state):
+        print(inspect.currentframe().f_code.co_name)
+
         if state == Qt.Checked:
-            current_thread = threading.Thread(target=self.repeat_clicked)
+            current_thread = threading.Thread(target=self.play_audio)
             current_thread.start()
         else:
             # Выключить аудио
             self.stop_flag.set()
+
+        self.settings.setValue("audio_enabled", self.switch_audio.isChecked())
 
     def google_Translate_to_trans_with_random_lang(self, text):
         """Переводит реальные абзацы, исходный язык неизвестен, реузльтат тоже
@@ -941,6 +1032,8 @@ class MyWindow(QWidget):
         return text_res
 
     def next_button_clicked(self):
+        print(inspect.currentframe().f_code.co_name)
+
         self.count += 1
         n = len(self.list_sentences)
         # если счетчик достиг конца книги и направление вперед, то переводим его в начало
@@ -948,10 +1041,14 @@ class MyWindow(QWidget):
             self.count = 0
             if self.bookmark != len(self.list_paragraph) - 1:
                 self.bookmark += 1
+            self.formint_output_text()
+        else:
+            self.output_paragraph()
 
-        self.formint_output_text()
 
     def next_next_button_clicked(self):
+        print(inspect.currentframe().f_code.co_name)
+
         if self.bookmark != len(self.list_paragraph) - 1:
             self.count = 0
             self.bookmark += 1
@@ -959,24 +1056,29 @@ class MyWindow(QWidget):
         self.formint_output_text()
 
     def prev_button_clicked(self):
+        print(inspect.currentframe().f_code.co_name)
+
         if self.count == 0:
             if self.bookmark != 0:
                 self.bookmark -= 1
-
-            self.count = len(self.scan_sentence(self.list_paragraph[self.bookmark])) - 1
+            self.count = len(nltk.sent_tokenize(self.list_paragraph[self.bookmark])) - 1
+            self.formint_output_text()
         else:
             self.count -= 1
-
-        self.formint_output_text()
+            self.output_paragraph()
 
     def prev_prev_button_clicked(self):
+        print(inspect.currentframe().f_code.co_name)
+
         self.count = 0
         if self.bookmark != 0:
             self.bookmark -= 1
 
         self.formint_output_text()
 
-    def toggle_theme(self):
+    def toggle_theme(self, output=True):
+        print(inspect.currentframe().f_code.co_name)
+
         # определяем текущую тему
         if self.switch_night_mode.isChecked():
             # переключаем на темную тему, как в предыдущем примере
@@ -998,6 +1100,7 @@ class MyWindow(QWidget):
             palette.setColor(palette.HighlightedText, self.night_mod_colors[12])
             QApplication.setPalette(palette)
 
+            self.settings.setValue("night_mod_colors", self.night_mod_colors)
         else:
             # переключаем на светлую тему
             QApplication.setStyle("windows")
@@ -1017,16 +1120,23 @@ class MyWindow(QWidget):
             palette.setColor(palette.HighlightedText, self.day_mode_colors[12])
             QApplication.setPalette(palette)
 
-        self.text_browser.setText("")  # clean output
-        self.formint_output_text()
+            self.settings.setValue("day_mode_colors", self.day_mode_colors)
+        if output:
+            self.text_browser.setText("")  # clean output
+            self.output_paragraph()
 
+        self.settings.setValue("night_mode", self.switch_night_mode.isChecked())
     def changeFont_update(self, event):
+        print(inspect.currentframe().f_code.co_name)
+
         if event.modifiers() == Qt.ControlModifier:  # Проверяем, что зажата клавиша Ctrl
             font = self.text_browser.font()
             font_size = font.pointSize()
             self.spin_box.setValue(font_size)  # Устанавливаем новое значение для spinBox
 
     def changeFont_valueChanged(self):
+        print(inspect.currentframe().f_code.co_name)
+
         font_size = self.spin_box.value()  # Получаем текущее значение spinBox
         font = self.text_browser.font()  # Получаем текущий шрифт text_browser
         font.setPointSize(font_size)  # Устанавливаем новый размер шрифта
@@ -1058,32 +1168,33 @@ class MyWindow(QWidget):
         else:
             self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.filter_text(text + end_space)))
 
-    def scan_sentence(self, text):
-        sentences = nltk.sent_tokenize(text)
-        return sentences
-
     def formint_output_text(self):
-        self.text_browser.setText("")  # clean output
+        print(inspect.currentframe().f_code.co_name)
+
+        self.hide_curren_and_all_page()
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
 
-        if self.currentParagraph[0] == "\n":
-            """Обработка исключения, когда вначале лишний перевод строки
-            Указывает на смену темы"""
-            self.currentParagraph = self.currentParagraph[1::]
-            if not self.switch_center.isChecked():
-                self.out("\t", end_space="")
-            self.out_marker2("***")
-
-        self.list_sentences = self.scan_sentence(self.currentParagraph)
+        self.list_sentences = nltk.sent_tokenize(self.currentParagraph)
 
         self.text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph)
 
-        self.list_sentences_trans = self.scan_sentence(self.text_trans)
+        self.list_sentences_trans = nltk.sent_tokenize(self.text_trans)
 
         self.output_paragraph()
 
     def output_paragraph(self):
+        print(inspect.currentframe().f_code.co_name)
+
+        self.text_browser.setText("")  # clean output
+
+        if self.currentParagraph[0] == "\n":
+            """Обработка исключения, когда вначале лишний перевод строки
+            Указывает на смену темы"""
+            if not self.switch_center.isChecked():
+                self.out("\t", end_space="")
+            self.out_marker2("***", "")
+
         if self.bookmark == 0:
             if not self.switch_center.isChecked():
                 self.out("\t", "")
@@ -1111,30 +1222,26 @@ class MyWindow(QWidget):
             else:
                 self.out(self.list_sentences_trans[i], " ")
 
-        self.out("\n")
+
 
         if self.bookmark == len(self.list_paragraph) - 1:
+            self.out("\n")
 
             if not self.switch_center.isChecked():
                 self.out("\t", "")
             self.out_marker2(self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
-            current_thread = threading.Thread(target=self.repeat_clicked)
+            current_thread = threading.Thread(target=self.play_audio)
             current_thread.start()
-
-        self.hide_curren_and_all_page()
 
         if self.active_mode == "book" and self.last_book in self.bookmarks_book:
             self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
+            self.settings.setValue("bookmarks_book", self.bookmarks_book)
+
         elif self.active_mode == "song" and self.last_song in self.bookmarks_song:
             self.bookmarks_song[self.last_song] = (self.bookmark, self.count)
-        self.save_settings()
-
-
-        # устанавливаем валидатор для ограничения ввода только целых чисел
-        validator = QIntValidator(1, len(self.list_paragraph), self)
-        self.input_field.setValidator(validator)
+            self.settings.setValue("bookmarks_song", self.bookmarks_song)
 
         if self.switch_center.isChecked():
             self.text_browser.setAlignment(QtCore.Qt.AlignCenter)
@@ -1142,33 +1249,23 @@ class MyWindow(QWidget):
             self.text_browser.setAlignment(QtCore.Qt.AlignLeft)
 
     def save_settings(self):
+        print(inspect.currentframe().f_code.co_name)
+
         # Сохранение настроек
         self.settings.setValue("cache_Music", self.cache_Music),
-        self.settings.setValue("night_mod_colors", self.night_mod_colors)
-        self.settings.setValue("day_mode_colors", self.day_mode_colors)
-        self.settings.setValue("default_language_orig", self.language_combo_original.currentData())
-        self.settings.setValue("default_language_trans", self.language_combo_translate.currentData())
-        self.settings.setValue("bookmarks_book", self.bookmarks_book)
-        self.settings.setValue("bookmarks_song", self.bookmarks_song)
-        self.settings.setValue("active_mode", self.active_mode)
-        self.settings.setValue("last_book", self.last_book)
-        self.settings.setValue("last_song", self.last_song)
         self.settings.setValue("fontSize", self.text_browser.font().pointSize())
-        self.settings.setValue("center_setting", self.switch_center.isChecked())
-        self.settings.setValue("audio_enabled", self.switch_audio.isChecked())
-        self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
-        self.settings.setValue("view_current_page", self.switch_Hide_current_page.isChecked())
-        self.settings.setValue("view_all_pages", self.switch_Hide_all_pages.isChecked())
-        self.settings.setValue("night_mode", self.switch_night_mode.isChecked())
         self.settings.setValue("window_geometry_x", self.geometry().x())
         self.settings.setValue("window_geometry_y", self.geometry().y())
         self.settings.setValue("window_geometry_width", self.geometry().width())
         self.settings.setValue("window_geometry_height", self.geometry().height())
 
     def closeEvent(self, event):
+        print(inspect.currentframe().f_code.co_name)
+
+        self.stop_flag.set()
         # вызываем метод save() перед закрытием окна
         self.save_settings()
-        self.translator.save_cache_to_settings()
+        self.translator.save_cache_to_settings(self)
 
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)
