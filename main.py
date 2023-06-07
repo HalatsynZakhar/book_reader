@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
     QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog
 from lxml import etree
 
+import main
 from AudioThread import AudioThread
 from CachedTranslator import CachedTranslator
 from MyTextBrowser import MyTextBrowser
@@ -39,9 +40,6 @@ class MyWindow(QWidget):
         self.translator = CachedTranslator()
 
         self.download_settings()
-
-
-
 
         self.create_GUI()
 
@@ -147,6 +145,11 @@ class MyWindow(QWidget):
         self.switch_audio.setShortcut("V")
         if self.audio_enabled:
             self.switch_audio.toggle()
+
+        self.switch_auto_play = QCheckBox(self.google_Translate_init("Autoplay"), self)
+        audio_setting_layout.addWidget(self.switch_auto_play)
+        if self.auto_play:
+            self.switch_auto_play.toggle()
 
         self.switch_audio_slow = QCheckBox(self.google_Translate_init("Slow playback"), self)
         audio_setting_layout.addWidget(self.switch_audio_slow)
@@ -291,8 +294,10 @@ class MyWindow(QWidget):
         self.previous_button.clicked.connect(self.prev_button_clicked)
         self.prev_prev_button.clicked.connect(self.prev_prev_button_clicked)
 
+
         self.switch_night_mode.stateChanged.connect(lambda: self.toggle_theme())
         self.switch_center.stateChanged.connect(self.center)
+        self.switch_auto_play.stateChanged.connect(self.auto_play_func)
         self.switch_audio.stateChanged.connect(self.audio_switch)
         self.switch_audio_slow.stateChanged.connect(self.audio_slow_switch)
         self.repeat_button.clicked.connect(self.play_audio)
@@ -320,6 +325,13 @@ class MyWindow(QWidget):
             self.setWindowTitle("{}".format(self.last_book))
         if self.active_mode == "song":
             self.setWindowTitle(" ".join(self.last_song))
+
+    def auto_go_next(self):
+        print(inspect.currentframe().f_code.co_name)
+
+        if self.switch_audio.isChecked() and self.switch_auto_play.isChecked():
+            self.next_button_clicked()
+        pass
 
     def select_bookmark_song(self):
         print(inspect.currentframe().f_code.co_name)
@@ -479,7 +491,7 @@ class MyWindow(QWidget):
         button_navigator_text = self.google_Translate_to_trans_with_eng("Open file") + " (O)"
         select_bookmark = self.google_Translate_to_trans_with_eng("Search history")
         select_bookmark_song = self.google_Translate_to_trans_with_eng("Search history")
-
+        swith_autoplay = self.google_Translate_to_trans_with_eng("Autoplay")
 
         self.previous_button.setText(previous_button_text)
         self.prev_prev_button.setText(prev_prev_button_text)
@@ -488,6 +500,7 @@ class MyWindow(QWidget):
         self.font_size_label.setText(font_size_label_text)
         self.repeat_button.setText(repaet_button_text)
         self.switch_audio.setText(switch_audio_text)
+        self.switch_auto_play.setText(swith_autoplay)
         self.switch_audio_slow.setText(switch_audio_text_slow_text)
         self.go_to_page_label.setText(go_to_page_label_text)
         self.switch_Hide_current_page.setText(switch_hide_current_page_text)
@@ -517,6 +530,7 @@ class MyWindow(QWidget):
         # и обновляем настройки в вашем приложении
 
         self.settings.setValue("default_language_trans", self.language_combo_translate.currentData())
+
 
     def select_file(self):
         print(inspect.currentframe().f_code.co_name)
@@ -728,6 +742,7 @@ class MyWindow(QWidget):
                                  )
 
         # Загрузка настроек
+        self.auto_play = self.settings.value("auto_play", "false")
         self.cache_Music = self.settings.value("cache_Music", {})
         self.night_mod_colors = self.settings.value('night_mod_colors',
                                                     [color.name() for color in self.night_mode_default])
@@ -757,6 +772,7 @@ class MyWindow(QWidget):
         self.window_geometry_width = int(self.window_geometry_width)
         self.window_geometry_height = int(self.window_geometry_height)
 
+        self.auto_play = True if self.auto_play.lower() == "true" else False
         self.night_mode = True if self.night_mode.lower() == "true" else False
         self.center_setting = True if self.center_setting.lower() == "true" else False
         self.audio_enabled = True if self.audio_enabled.lower() == "true" else False
@@ -967,6 +983,7 @@ class MyWindow(QWidget):
 
         self.stop_flag = threading.Event()
         thread = AudioThread(self.list_sentences[self.count], self.switch_audio_slow.isChecked(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
+        thread.finished.connect(self.auto_go_next)
         thread.start()
 
     def center(self, state):
@@ -982,18 +999,29 @@ class MyWindow(QWidget):
     def audio_slow_switch(self, state):
         print(inspect.currentframe().f_code.co_name)
 
-        if self.switch_audio.isChecked():
-            current_thread = threading.Thread(target=self.play_audio)
-            current_thread.start()
+        if state == Qt.Checked:
+            if self.switch_audio.isChecked():
+                self.play_audio()
+        else:
+            # Выключить аудио
+            self.stop_flag.set()
 
         self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
+    def auto_play_func(self, state):
+        print(inspect.currentframe().f_code.co_name)
+        if state == Qt.Checked:
+            if self.switch_audio.isChecked():
+                self.play_audio()
+        else:
+            # Выключить аудио
+            self.stop_flag.set()
 
+        self.settings.setValue("auto_play", self.switch_auto_play.isChecked())
     def audio_switch(self, state):
         print(inspect.currentframe().f_code.co_name)
 
         if state == Qt.Checked:
-            current_thread = threading.Thread(target=self.play_audio)
-            current_thread.start()
+            self.play_audio()
         else:
             # Выключить аудио
             self.stop_flag.set()
@@ -1193,12 +1221,12 @@ class MyWindow(QWidget):
             Указывает на смену темы"""
             if not self.switch_center.isChecked():
                 self.out("\t", end_space="")
-            self.out_marker2("***", "")
+            self.out_marker2("***", "\n\n")
 
         if self.bookmark == 0:
             if not self.switch_center.isChecked():
                 self.out("\t", "")
-            self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text") + "\n")
+            self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text"))
 
         """Вывод параграфа и перевода, с выделением предложения"""
 
@@ -1206,6 +1234,9 @@ class MyWindow(QWidget):
             self.out("\t", "")
 
         for i in range(len(self.list_sentences)):
+            if self.list_sentences[i][0] == "\n":
+                self.list_sentences[i] = self.list_sentences[i][1::]
+
             if self.count == i:
                 self.out_marker1(self.list_sentences[i], " ")
             else:
