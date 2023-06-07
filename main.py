@@ -3,23 +3,19 @@ import inspect
 import os
 import sys
 import threading
-
-
 import chardet
 import requests
 from bs4 import BeautifulSoup
 
 import nltk
-import pygame
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QSettings, QEvent
 from PyQt5.QtGui import QPalette, QColor, QIntValidator
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, \
-    QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog
+    QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog, QDoubleSpinBox
 from lxml import etree
 
-import main
 from AudioThread import AudioThread
 from CachedTranslator import CachedTranslator
 from MyTextBrowser import MyTextBrowser
@@ -32,7 +28,6 @@ class MyWindow(QWidget):
         super().__init__()
 
         self.lock = threading.Lock()
-        pygame.init()
 
         self.stop_flag = None
 
@@ -151,10 +146,20 @@ class MyWindow(QWidget):
         if self.auto_play:
             self.switch_auto_play.toggle()
 
-        self.switch_audio_slow = QCheckBox(self.google_Translate_init("Slow playback"), self)
-        audio_setting_layout.addWidget(self.switch_audio_slow)
-        if self.slow_reading:
-            self.switch_audio_slow.toggle()
+        playback_speed_layout = QHBoxLayout()
+        audio_setting_layout.addLayout(playback_speed_layout)
+
+        self.playback_speed_label = QLabel(self.google_Translate_init("Playback speed"))
+        playback_speed_layout.addWidget(self.playback_speed_label)
+
+
+        self.spin_box_playback_speed = QDoubleSpinBox()
+        playback_speed_layout.addWidget(self.spin_box_playback_speed)
+        self.spin_box_playback_speed.setMinimum(0.25)
+        self.spin_box_playback_speed.setMaximum(4.0)
+        self.spin_box_playback_speed.setSingleStep(0.1)
+        self.spin_box_playback_speed.setValue(self.playback_speed)
+        playback_speed_layout.addWidget(self.spin_box_playback_speed)
 
         # создаем маленький вертикальный лейаут
         go_to_page_layout = QVBoxLayout()
@@ -299,12 +304,13 @@ class MyWindow(QWidget):
         self.switch_center.stateChanged.connect(self.center)
         self.switch_auto_play.stateChanged.connect(self.auto_play_func)
         self.switch_audio.stateChanged.connect(self.audio_switch)
-        self.switch_audio_slow.stateChanged.connect(self.audio_slow_switch)
         self.repeat_button.clicked.connect(self.play_audio)
         self.settings_button.clicked.connect(self.open_settings_dialog)
 
         # Соединение событий прокрутки колесика мыши и изменения размера шрифта в text_browser
         self.spin_box.valueChanged.connect(self.changeFont_valueChanged)
+        self.spin_box_playback_speed.valueChanged.connect(self.spin_box_playback_speed_func)
+
         self.switch_Hide_all_pages.stateChanged.connect(self.hide_all_pages)
         self.switch_Hide_current_page.stateChanged.connect(self.hide_curren_page)
         self.spin_box.setMaximumWidth(40)
@@ -326,6 +332,8 @@ class MyWindow(QWidget):
         if self.active_mode == "song":
             self.setWindowTitle(" ".join(self.last_song))
 
+    def spin_box_playback_speed_func(self):
+        self.settings.setValue("playback_speed", self.spin_box_playback_speed.value())
     def auto_go_next(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -492,7 +500,9 @@ class MyWindow(QWidget):
         select_bookmark = self.google_Translate_to_trans_with_eng("Search history")
         select_bookmark_song = self.google_Translate_to_trans_with_eng("Search history")
         swith_autoplay = self.google_Translate_to_trans_with_eng("Autoplay")
+        playback_speed = self.google_Translate_to_trans_with_eng("Playback speed")
 
+        self.spin_box_playback_speed.setText(playback_speed)
         self.previous_button.setText(previous_button_text)
         self.prev_prev_button.setText(prev_prev_button_text)
         self.lang_of_study_label.setText(lang_of_study_label_text)
@@ -501,7 +511,7 @@ class MyWindow(QWidget):
         self.repeat_button.setText(repaet_button_text)
         self.switch_audio.setText(switch_audio_text)
         self.switch_auto_play.setText(swith_autoplay)
-        self.switch_audio_slow.setText(switch_audio_text_slow_text)
+        self.spin_box_playback_speed.setText(switch_audio_text_slow_text)
         self.go_to_page_label.setText(go_to_page_label_text)
         self.switch_Hide_current_page.setText(switch_hide_current_page_text)
         self.switch_Hide_all_pages.setText(switch_hide_all_pages_text)
@@ -721,7 +731,8 @@ class MyWindow(QWidget):
                                    QColor(42, 130, 218),
                                    QColor(0, 0, 0),
                                    QColor(255, 255, 0),
-                                   QColor(255, 0, 0)
+                                   QColor(255, 0, 0),
+                                   QColor(0, 0, 0)
                                    )
 
         self.day_mode_default = (QColor(255, 255, 255),
@@ -738,7 +749,8 @@ class MyWindow(QWidget):
                                  QColor(0, 122, 255),
                                  QColor(255, 255, 255),
                                  QColor(128, 64, 48),
-                                 QColor(255, 0, 0)
+                                 QColor(255, 0, 0),
+                                 QColor(255, 255, 255)
                                  )
 
         # Загрузка настроек
@@ -757,7 +769,9 @@ class MyWindow(QWidget):
         self.fontSize = self.settings.value("fontSize", 20)
         self.center_setting = self.settings.value("center_setting", "false")
         self.audio_enabled = self.settings.value("audio_enabled", "false")
-        self.slow_reading = self.settings.value("slow_reading", "false")
+
+
+        self.playback_speed = self.settings.value("playback_speed", 1.0)
         self.view_current_page = self.settings.value("view_current_page", "true")
         self.view_all_pages = self.settings.value("view_all_pages", "false")
         self.night_mode = self.settings.value("night_mode", "true")
@@ -765,7 +779,9 @@ class MyWindow(QWidget):
         self.window_geometry_y = self.settings.value("window_geometry_y", 600)
         self.window_geometry_width = self.settings.value("window_geometry_width", 800)
         self.window_geometry_height = self.settings.value("window_geometry_height", 600)
+
         # Преобразование типов данных
+        self.playback_speed = float(self.playback_speed)
         self.fontSize = int(self.fontSize)
         self.window_geometry_x = int(self.window_geometry_x)
         self.window_geometry_y = int(self.window_geometry_y)
@@ -776,7 +792,6 @@ class MyWindow(QWidget):
         self.night_mode = True if self.night_mode.lower() == "true" else False
         self.center_setting = True if self.center_setting.lower() == "true" else False
         self.audio_enabled = True if self.audio_enabled.lower() == "true" else False
-        self.slow_reading = True if self.slow_reading.lower() == "true" else False
         self.view_current_page = True if self.view_current_page.lower() == "true" else False
         self.view_all_pages = True if self.view_all_pages.lower() == "true" else False
 
@@ -787,7 +802,7 @@ class MyWindow(QWidget):
                                        "Window background color", "Window text color", "Base color",
                                        "Alternate base color", "Tooltip base color",
                                        "Tooltip text color", "Text color", "Button color", "Button text color",
-                                       "Bright text color", "Link color", "Highlight color", "Highlighted text color", "Highlighting a sentence", "Header highlighting", "default settings"]
+                                       "Bright text color", "Link color", "Highlight color", "Highlighted text color", "Highlighting a sentence", "Header highlighting", "Unselected text", "default settings"]
         self.translate_dialog_windows = [self.google_Translate_init(i) for i in self.orgignal_dialog_window]
 
     def read_txt(self):
@@ -982,7 +997,7 @@ class MyWindow(QWidget):
             self.stop_flag.set()
 
         self.stop_flag = threading.Event()
-        thread = AudioThread(self.list_sentences[self.count], self.switch_audio_slow.isChecked(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
+        thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
         thread.finished.connect(self.auto_go_next)
         thread.start()
 
@@ -996,17 +1011,7 @@ class MyWindow(QWidget):
         self.output_paragraph()
         self.settings.setValue("center_setting", self.switch_center.isChecked())
 
-    def audio_slow_switch(self, state):
-        print(inspect.currentframe().f_code.co_name)
-
-        if state == Qt.Checked:
-            if self.switch_audio.isChecked():
-                self.play_audio()
-        else:
-            # Выключить аудио
-            self.stop_flag.set()
-
-        self.settings.setValue("slow_reading", self.switch_audio_slow.isChecked())
+        self.settings.setValue("slow_reading", self.spin_box_playback_speed.isChecked())
     def auto_play_func(self, state):
         print(inspect.currentframe().f_code.co_name)
         if state == Qt.Checked:
@@ -1182,8 +1187,10 @@ class MyWindow(QWidget):
         return text
 
     def out(self, text, end_space="\n"):
-        self.text_browser.insertHtml(self.filter_text(text + end_space))
-
+        if self.switch_night_mode.isChecked():
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[15].name(), self.filter_text(text + end_space)))
+        else:
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[15].name(), self.filter_text(text + end_space)))
     def out_marker1(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
             self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.filter_text(text + end_space)))
@@ -1263,8 +1270,7 @@ class MyWindow(QWidget):
             self.out_marker2(self.google_Translate_to_orig_with_Eng("End of text"))
 
         if self.switch_audio.isChecked():
-            current_thread = threading.Thread(target=self.play_audio)
-            current_thread.start()
+            self.play_audio()
 
         if self.active_mode == "book" and self.last_book in self.bookmarks_book:
             self.bookmarks_book[self.last_book] = (self.bookmark, self.count)
@@ -1293,7 +1299,6 @@ class MyWindow(QWidget):
     def closeEvent(self, event):
         print(inspect.currentframe().f_code.co_name)
 
-        self.stop_flag.set()
         # вызываем метод save() перед закрытием окна
         self.save_settings()
         self.translator.save_cache_to_settings(self)

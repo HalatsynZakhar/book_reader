@@ -1,5 +1,5 @@
 import threading
-import pygame
+import vlc
 from PyQt5.QtCore import pyqtSignal, QObject
 from gtts import gTTS
 
@@ -7,25 +7,26 @@ from gtts import gTTS
 class AudioThread(threading.Thread, QObject):
     finished = pyqtSignal()
 
-    def __init__(self, sentence, slow, lang, stop_flag, lock):
+    def __init__(self, sentence, speed, lang, stop_flag, lock):
         super(AudioThread, self).__init__()
         QObject.__init__(self)
         self.sentence = sentence
         self.stop_flag = stop_flag
-        self.slow = slow
+        self.speed = speed
         self.lang = lang
         self.lock = lock
 
     def run(self):
-        tts = gTTS(self.sentence, slow=self.slow, lang=self.lang)
+        tts = gTTS(self.sentence, slow=True, lang=self.lang)
         self.lock.acquire()  # запрос блокировки
         tts.save('sentence.mp3')
-        song = pygame.mixer.Sound('sentence.mp3')
-
-        song.play()
+        p = vlc.MediaPlayer("sentence.mp3")
+        p.set_rate(self.speed)
+        p.play()
         self.lock.release()  # освобождение блокировки
-        while not (not pygame.mixer.get_busy() or self.stop_flag.is_set()):
+        # Ожидаем, пока медиа-контент не закончится или не будет установлен флаг остановки
+        while not (p.get_state() == vlc.State.Ended or self.stop_flag.is_set()):
             pass
-        pygame.mixer.stop()
+        p.stop()
         if not self.stop_flag.is_set():
             self.finished.emit()
