@@ -7,9 +7,10 @@ from gtts import gTTS
 class AudioThread(threading.Thread, QObject):
     finished = pyqtSignal()
 
-    def __init__(self, sentence, speed, lang, stop_flag, lock):
+    def __init__(self, instance, sentence, speed, lang, stop_flag, lock):
         super(AudioThread, self).__init__()
         QObject.__init__(self)
+        self.instance = instance
         self.sentence = sentence
         self.stop_flag = stop_flag
         self.speed = speed
@@ -20,7 +21,7 @@ class AudioThread(threading.Thread, QObject):
         tts = gTTS(self.sentence, slow=True, lang=self.lang)
         self.lock.acquire()  # запрос блокировки
         tts.save('sentence.mp3')
-        p = vlc.MediaPlayer("sentence.mp3")
+        p = self.instance.MediaPlayer("sentence.mp3")
         p.set_rate(self.speed)
         p.play()
         self.lock.release()  # освобождение блокировки

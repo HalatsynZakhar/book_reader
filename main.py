@@ -5,6 +5,7 @@ import sys
 import threading
 import chardet
 import requests
+import vlc
 from bs4 import BeautifulSoup
 
 import nltk
@@ -26,6 +27,8 @@ class MyWindow(QWidget):
         print(inspect.currentframe().f_code.co_name)
 
         super().__init__()
+
+        self.instance = vlc.Instance()
 
         self.lock = threading.Lock()
 
@@ -998,7 +1001,7 @@ class MyWindow(QWidget):
             self.stop_flag.set()
 
         self.stop_flag = threading.Event()
-        thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
+        thread = AudioThread(self.instance, self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
         thread.finished.connect(self.auto_go_next)
         thread.start()
 
