@@ -20,12 +20,14 @@ class AudioThread(threading.Thread, QObject):
         self.go_next = go_next
     def run(self):
         print("AudioThread: {} start".format(threading.current_thread()))
-        self.lock.acquire()  # запрос блокировки
         tts = gTTS(self.sentence, slow=True, lang=self.lang)
 
-        tts.save('sentence.mp3')
+        self.lock.acquire()  # запрос блокировки
 
+        tts.save('sentence.mp3')
         p = vlc.MediaPlayer("sentence.mp3")
+
+        self.lock.release()  # освобождение блокировки
         p.set_rate(self.speed)
 
         if self.stop_flag.is_set():
@@ -45,5 +47,5 @@ class AudioThread(threading.Thread, QObject):
                         self.finished.emit()
                     break
 
-        self.lock.release()  # освобождение блокировки
+
         print("AudioThread: {} finish".format(threading.current_thread()))
