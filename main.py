@@ -3,6 +3,8 @@ import inspect
 import os
 import sys
 import threading
+from time import sleep
+
 import chardet
 import requests
 import vlc
@@ -16,6 +18,7 @@ from PyQt5.QtGui import QPalette, QColor, QIntValidator
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, \
     QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog, QDoubleSpinBox
 from lxml import etree
+import pygame
 
 from AudioThread import AudioThread
 from CachedTranslator import CachedTranslator
@@ -27,12 +30,10 @@ class MyWindow(QWidget):
         print(inspect.currentframe().f_code.co_name)
 
         super().__init__()
-
-        self.instance = vlc.Instance()
+        pygame.init()
 
         self.lock = threading.Lock()
-
-        self.stop_flag = None
+        self.stop_flag = threading.Event()
 
         # Создание экземпляра CachedTranslator
         self.translator = CachedTranslator()
@@ -341,10 +342,7 @@ class MyWindow(QWidget):
     def auto_go_next(self):
         print(inspect.currentframe().f_code.co_name)
 
-        if self.switch_audio.isChecked() and self.switch_auto_play.isChecked():
-            self.next_button_clicked()
-        pass
-
+        self.next_button_clicked()
     def select_bookmark_song(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -996,12 +994,14 @@ class MyWindow(QWidget):
     def play_audio(self):
         print(inspect.currentframe().f_code.co_name)
 
-        if self.stop_flag != None:
-            # остановка генерации аудиофайла при переключении на следующее предложение
-            self.stop_flag.set()
+
+        # остановка генерации аудиофайла при переключении на следующее предложение
+        self.stop_flag.set()
 
         self.stop_flag = threading.Event()
-        thread = AudioThread(self.instance, self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag, self.lock)
+        thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag,
+                             self.lock,
+                             self.switch_auto_play.isChecked())
         thread.finished.connect(self.auto_go_next)
         thread.start()
 
@@ -1308,6 +1308,8 @@ class MyWindow(QWidget):
         self.save_settings()
         self.translator.save_cache_to_settings(self)
 
+        self.stop_flag.set()
+        pygame.quit()
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)
 
