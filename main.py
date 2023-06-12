@@ -30,10 +30,13 @@ class MyWindow(QWidget):
         print(inspect.currentframe().f_code.co_name)
 
         super().__init__()
+
         pygame.init()
+        # эта биллиотека используется, чтобы избежать преырвания в блютуз наушинках
 
         self.lock = threading.Lock()
         self.stop_flag = threading.Event()
+
 
         # Создание экземпляра CachedTranslator
         self.translator = CachedTranslator()
@@ -57,7 +60,7 @@ class MyWindow(QWidget):
         main_layout = QVBoxLayout()
 
         # создаем textBrowser и добавляем его в вертикальный лейаут
-        self.text_browser = MyTextBrowser()
+        self.text_browser = MyTextBrowser(my_window=self)
         main_layout.addWidget(self.text_browser)
         font = QtGui.QFont()
         font.setPointSize(self.fontSize)
@@ -187,29 +190,41 @@ class MyWindow(QWidget):
         pages_layout = QVBoxLayout()
         horizontal_layout.addLayout(pages_layout)
 
+        self.switch_use_cursor = QCheckBox(self.google_Translate_init("Left click navigation"), self)
+        pages_layout.addWidget(self.switch_use_cursor)
+        if self.use_cursor:
+            self.switch_use_cursor.toggle()
+
+
+        # создаем маленький гор лейаут
+        curr_page = QHBoxLayout()
+        pages_layout.addLayout(curr_page)
+
         self.switch_Hide_current_page = QCheckBox(self.google_Translate_init("View current page"), self)
-        pages_layout.addWidget(self.switch_Hide_current_page)
+        curr_page.addWidget(self.switch_Hide_current_page)
+        self.switch_Hide_current_page.setMinimumWidth(200)
         if self.view_current_page:
             self.switch_Hide_current_page.toggle()
 
-        self.switch_Hide_all_pages = QCheckBox(self.google_Translate_init("View all pages"), self)
-        pages_layout.addWidget(self.switch_Hide_all_pages)
-        if self.view_all_pages:
-            self.switch_Hide_all_pages.toggle()
-
-        # создаем маленький вертикальный лейаут
-        label_layout = QVBoxLayout()
-        horizontal_layout.addLayout(label_layout)
-
         # создаем label "???" и добавляем его в горизонтальный лейаут
         self.current_page_label = QLabel("?")
-        label_layout.addWidget(self.current_page_label)
+        curr_page.addWidget(self.current_page_label)
         self.current_page_label.setMinimumWidth(60)
         self.current_page_label.setAlignment(Qt.AlignCenter)
 
+        # создаем маленький гор лейаут
+        all_page = QHBoxLayout()
+        pages_layout.addLayout(all_page)
+
+        self.switch_Hide_all_pages = QCheckBox(self.google_Translate_init("View all pages"), self)
+        all_page.addWidget(self.switch_Hide_all_pages)
+        self.switch_Hide_all_pages.setMinimumWidth(200)
+        if self.view_all_pages:
+            self.switch_Hide_all_pages.toggle()
+
         # создаем label "???" и добавляем его в горизонтальный лейаут
         self.all_pages_label = QLabel("?")
-        label_layout.addWidget(self.all_pages_label)
+        all_page.addWidget(self.all_pages_label)
         self.all_pages_label.setMinimumWidth(60)
         self.all_pages_label.setAlignment(Qt.AlignCenter)
 
@@ -269,7 +284,7 @@ class MyWindow(QWidget):
         self.button_navigator.setShortcut("O")
         path_to_file_layout.addWidget(self.button_navigator)
 
-        self.select_bookmark_button = QPushButton(self.google_Translate_init("search history"), self)
+        self.select_bookmark_button = QPushButton(self.google_Translate_init("Search history"), self)
         path_to_file_layout.addWidget(self.select_bookmark_button)
 
         # создаем маленький горизонтальный лейаут
@@ -286,7 +301,7 @@ class MyWindow(QWidget):
         self.input_find_songs.setAlignment(QtCore.Qt.AlignCenter)
         self.input_find_songs.setMaxLength(100)
 
-        self.select_bookmark_song_button = QPushButton(self.google_Translate_init("search history"), self)
+        self.select_bookmark_song_button = QPushButton(self.google_Translate_init("Search history"), self)
         find_song_layout.addWidget(self.select_bookmark_song_button)
 
         # устанавливаем вертикальный лейаут в качестве главного лейаута окна
@@ -304,7 +319,7 @@ class MyWindow(QWidget):
         self.previous_button.clicked.connect(self.prev_button_clicked)
         self.prev_prev_button.clicked.connect(self.prev_prev_button_clicked)
 
-
+        self.switch_use_cursor.stateChanged.connect(self.use_cursor_func)
         self.switch_night_mode.stateChanged.connect(lambda: self.toggle_theme())
         self.switch_center.stateChanged.connect(self.center)
         self.switch_auto_play.stateChanged.connect(self.auto_play_func)
@@ -503,8 +518,10 @@ class MyWindow(QWidget):
         select_bookmark_song = self.google_Translate_to_trans_with_eng("Search history")
         swith_autoplay = self.google_Translate_to_trans_with_eng("Autoplay") + " (Space)"
         playback_speed = self.google_Translate_to_trans_with_eng("Playback speed")
+        left_click_nav = self.google_Translate_to_trans_with_eng("Left click navigation")
 
-        self.spin_box_playback_speed.setText(playback_speed)
+        self.switch_use_cursor.setText(left_click_nav)
+        self.playback_speed_label.setText(playback_speed)
         self.previous_button.setText(previous_button_text)
         self.prev_prev_button.setText(prev_prev_button_text)
         self.lang_of_study_label.setText(lang_of_study_label_text)
@@ -513,7 +530,6 @@ class MyWindow(QWidget):
         self.repeat_button.setText(repaet_button_text)
         self.switch_audio.setText(switch_audio_text)
         self.switch_auto_play.setText(swith_autoplay)
-        self.spin_box_playback_speed.setText(switch_audio_text_slow_text)
         self.go_to_page_label.setText(go_to_page_label_text)
         self.switch_Hide_current_page.setText(switch_hide_current_page_text)
         self.switch_Hide_all_pages.setText(switch_hide_all_pages_text)
@@ -756,6 +772,7 @@ class MyWindow(QWidget):
                                  )
 
         # Загрузка настроек
+        self.use_cursor = self.settings.value("use_cursor", "true")
         self.auto_play = self.settings.value("auto_play", "false")
         self.cache_Music = self.settings.value("cache_Music", {})
         self.night_mod_colors = self.settings.value('night_mod_colors',
@@ -772,10 +789,9 @@ class MyWindow(QWidget):
         self.center_setting = self.settings.value("center_setting", "false")
         self.audio_enabled = self.settings.value("audio_enabled", "false")
 
-
         self.playback_speed = self.settings.value("playback_speed", 1.0)
         self.view_current_page = self.settings.value("view_current_page", "true")
-        self.view_all_pages = self.settings.value("view_all_pages", "false")
+        self.view_all_pages = self.settings.value("view_all_pages", "true")
         self.night_mode = self.settings.value("night_mode", "true")
         self.window_geometry_x = self.settings.value("window_geometry_x", 800)
         self.window_geometry_y = self.settings.value("window_geometry_y", 600)
@@ -783,19 +799,24 @@ class MyWindow(QWidget):
         self.window_geometry_height = self.settings.value("window_geometry_height", 600)
 
         # Преобразование типов данных
-        self.playback_speed = float(self.playback_speed)
-        self.fontSize = int(self.fontSize)
-        self.window_geometry_x = int(self.window_geometry_x)
-        self.window_geometry_y = int(self.window_geometry_y)
-        self.window_geometry_width = int(self.window_geometry_width)
-        self.window_geometry_height = int(self.window_geometry_height)
-
+        self.use_cursor = True if self.use_cursor.lower() == "true" else False
         self.auto_play = True if self.auto_play.lower() == "true" else False
         self.night_mode = True if self.night_mode.lower() == "true" else False
         self.center_setting = True if self.center_setting.lower() == "true" else False
         self.audio_enabled = True if self.audio_enabled.lower() == "true" else False
         self.view_current_page = True if self.view_current_page.lower() == "true" else False
         self.view_all_pages = True if self.view_all_pages.lower() == "true" else False
+
+
+
+
+
+        self.playback_speed = float(self.playback_speed)
+        self.fontSize = int(self.fontSize)
+        self.window_geometry_x = int(self.window_geometry_x)
+        self.window_geometry_y = int(self.window_geometry_y)
+        self.window_geometry_width = int(self.window_geometry_width)
+        self.window_geometry_height = int(self.window_geometry_height)
 
         self.setGeometry(self.window_geometry_x, self.window_geometry_y, self.window_geometry_width,
                          self.window_geometry_height)
@@ -997,13 +1018,12 @@ class MyWindow(QWidget):
 
         # остановка генерации аудиофайла при переключении на следующее предложение
         self.stop_flag.set()
-
         self.stop_flag = threading.Event()
-        thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag,
+        self.thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag,
                              self.lock,
                              self.switch_auto_play.isChecked())
-        thread.finished.connect(self.auto_go_next)
-        thread.start()
+        self.thread.finished.connect(self.auto_go_next)
+        self.thread.start()
 
     def center(self, state):
         print(inspect.currentframe().f_code.co_name)
@@ -1015,7 +1035,12 @@ class MyWindow(QWidget):
         self.output_paragraph()
         self.settings.setValue("center_setting", self.switch_center.isChecked())
 
-        self.settings.setValue("slow_reading", self.spin_box_playback_speed.isChecked())
+
+    def use_cursor_func(self, state):
+        print(inspect.currentframe().f_code.co_name)
+
+        self.settings.setValue("use_cursor", self.switch_use_cursor.isChecked())
+
     def auto_play_func(self, state):
         print(inspect.currentframe().f_code.co_name)
         if state == Qt.Checked:
@@ -1239,7 +1264,7 @@ class MyWindow(QWidget):
         if self.bookmark == 0:
             if not self.switch_center.isChecked():
                 self.out("\t", "")
-            self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text"))
+            self.out_marker2(self.google_Translate_to_orig_with_Eng("Beginning of text"), "\n\n")
 
         """Вывод параграфа и перевода, с выделением предложения"""
 

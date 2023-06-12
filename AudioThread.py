@@ -1,5 +1,7 @@
 import inspect
 import threading
+from time import sleep
+
 import vlc
 from PyQt5.QtCore import pyqtSignal, QObject
 from gtts import gTTS
@@ -7,6 +9,7 @@ from gtts import gTTS
 
 class AudioThread(threading.Thread, QObject):
     finished = pyqtSignal()
+
     def __init__(self, sentence, speed, lang, stop_flag,
                  lock,
                  go_next):
@@ -18,9 +21,17 @@ class AudioThread(threading.Thread, QObject):
         self.lang = lang
         self.lock = lock
         self.go_next = go_next
+
     def run(self):
         print("AudioThread: {} start".format(threading.current_thread()))
-        tts = gTTS(self.sentence, slow=True, lang=self.lang)
+        try:
+            tts = gTTS(self.sentence, slow=True, lang=self.lang)
+
+            if self.stop_flag.is_set():
+                print("AudioThread: {} step1 finish".format(threading.current_thread()))
+                return
+        except:
+            return
 
         self.lock.acquire()  # запрос блокировки
 
@@ -28,24 +39,25 @@ class AudioThread(threading.Thread, QObject):
         p = vlc.MediaPlayer("sentence.mp3")
 
         self.lock.release()  # освобождение блокировки
-        p.set_rate(self.speed)
 
         if self.stop_flag.is_set():
-            print("AudioThread: {} early finish".format(threading.current_thread()))
-        else:
-            p.play()
-            # Ожидаем, пока медиа-контент не закончится или не будет установлен флаг остановки
-            while True:
-                stop = self.stop_flag.is_set()
-                end = p.get_state() == vlc.State.Ended
-                if stop:
-                    p.stop()
-                    break
-                if end:
-                    p.stop()
-                    if self.go_next:
-                        self.finished.emit()
-                    break
+            print("AudioThread: {} step2 finish".format(threading.current_thread()))
+            return
 
+        p.set_rate(self.speed)
 
-        print("AudioThread: {} finish".format(threading.current_thread()))
+        p.play()
+        # Ожидаем, пока медиа-контент не закончится или не будет установлен флаг остановки
+        while True:
+            if self.stop_flag.is_set():
+                p.stop()
+                print("AudioThread: {} step3 finish".format(threading.current_thread()))
+                return
+            if p.get_state() == vlc.State.Ended:
+                p.stop()
+                if self.go_next:
+                    self.finished.emit()
+                print("AudioThread: {} step4 finish".format(threading.current_thread()))
+                return
+            sleep(0.1)
+

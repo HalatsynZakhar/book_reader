@@ -9,18 +9,20 @@ class CachedTranslator(Translator):
         self.cache = {}
 
     def translate(self, text, dest='en', src='auto'):
-        print("translate:", end=" ")
-        key = (text, dest, src)
-        if key in self.cache:
-            print("cache")
-            return self.cache[key]
-        result = super().translate(text, dest=dest, src=src)
-        if len(self.cache) >= self.cache_size:
-            self.cache.popitem()
-        self.cache[key] = result.text
-        print("google")
-        return result.text
-
+        try:
+            print("translate:", end=" ")
+            key = (text, dest, src)
+            if key in self.cache:
+                print("cache")
+                return self.cache[key]
+            result = super().translate(text, dest=dest, src=src)
+            if len(self.cache) >= self.cache_size:
+                self.cache.popitem()
+            self.cache[key] = result.text
+            print("google")
+            return result.text
+        except:
+            return text
     def load_cache_from_settings(self, MyWindow):
         self.cache = MyWindow.settings.value("cache", {})
 

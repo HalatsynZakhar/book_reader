@@ -1,13 +1,13 @@
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets, Qt
 from PyQt5.QtWidgets import QTextBrowser
 
-
 class MyTextBrowser(QTextBrowser):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, my_window=None):
         super().__init__(parent)
         self.min_font_size = 1
         self.max_font_size = 999
-
+        self.myWindow = my_window
+        self.select = False
     def wheelEvent(self, event):
         if event.modifiers() & QtCore.Qt.ControlModifier:
             font = self.currentFont()
@@ -20,8 +20,7 @@ class MyTextBrowser(QTextBrowser):
             font.setPointSize(font_size)
             self.setFont(font)
 
-        else:
-            super().wheelEvent(event)
+        super().wheelEvent(event)
 
     def keyPressEvent(self, event):
         if event.modifiers() & QtCore.Qt.ControlModifier:
@@ -34,9 +33,68 @@ class MyTextBrowser(QTextBrowser):
             font_size = max(self.min_font_size, min(self.max_font_size, font_size))
             font.setPointSize(font_size)
             self.setFont(font)
-            if event.key() == QtCore.Qt.Key_C:
-                self.copy()
-            elif event.key() == QtCore.Qt.Key_X:
-                self.cut()
-        else:
-            super().keyPressEvent(event)
+
+        super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            self.left_button_pressed = True
+            self.left_button_down_time = event.timestamp()
+            self.left_button_down_pos = event.pos()
+        elif event.button() == QtCore.Qt.RightButton:
+            self.right_button_pressed = True
+            self.right_button_down_time = event.timestamp()
+            self.right_button_down_pos = event.pos()
+
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        cursor = self.myWindow.text_browser.textCursor()
+        if self.myWindow.switch_use_cursor.isChecked():
+            #if self.myWindow.switch_use_cursor.isChecked() and not self.textCursor().hasSelection():
+            if not cursor.hasSelection():
+                if self.select:
+                    """Если до этого был выбран текст, то игнорировать нажатие"""
+                    self.select = False
+                    """Игнорирование только один раз, далее стандартно"""
+                else:
+                    if event.button() == QtCore.Qt.LeftButton:
+                        if (event.timestamp() - self.left_button_down_time) < 500 and \
+                           (event.pos() - self.left_button_down_pos).manhattanLength() < 5:
+                            # Short left click
+                            if event.x() < self.width() / 2:
+                                """Короткое нажатие ЛКМ слева"""
+                                self.myWindow.prev_button_clicked()
+                            else:
+                                """Короткое нажатие ЛКМ справа"""
+                                self.myWindow.next_button_clicked()
+                        else:
+                            # Long left click
+                            if event.x() < self.width() / 2:
+                                self.myWindow.prev_prev_button_clicked()
+                            else:
+                                self.myWindow.next_next_button_clicked()
+
+                    self.left_button_pressed = False
+
+                """
+                elif event.button() == QtCore.Qt.RightButton:
+                    if (event.timestamp() - self.right_button_down_time) < 500 and \
+                       (event.pos() - self.right_button_down_pos).manhattanLength() < 5:
+                        # Short right click
+                        if event.x() < self.width() / 2:
+                            print("5")
+                        else:
+                            print("6")
+                    else:
+                        # Long right click
+                        if event.x() < self.width() / 2:
+                            print("7")
+                        else:
+                            print("8")
+                    self.right_button_pressed = False
+                """
+            else:
+                """Фиксируем что было выделение текста для игнорирование короткого нажатия"""
+                self.select = True
+        super().mouseReleaseEvent(event)
