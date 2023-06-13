@@ -3,13 +3,9 @@ import inspect
 import os
 import sys
 import threading
-from time import sleep
-
 import chardet
 import requests
-import vlc
 from bs4 import BeautifulSoup
-
 import nltk
 
 from PyQt5 import QtCore, QtGui
