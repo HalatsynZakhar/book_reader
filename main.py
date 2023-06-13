@@ -232,6 +232,13 @@ class MyWindow(QWidget):
         toggle_and_aljust_layout = QVBoxLayout()
         horizontal_layout.addLayout(toggle_and_aljust_layout)
 
+
+        self.switch_visible_trans = QCheckBox(self.google_Translate_init("Translation display") + " (T)", self)
+        toggle_and_aljust_layout.addWidget(self.switch_visible_trans)
+        self.switch_visible_trans.setShortcut("T")
+        if self.visible_trans:
+            self.switch_visible_trans.toggle()
+
         self.switch_center = QCheckBox(self.google_Translate_init("Center alignment") + " (E)", self)
         toggle_and_aljust_layout.addWidget(self.switch_center)
         self.switch_center.setShortcut("E")
@@ -319,6 +326,7 @@ class MyWindow(QWidget):
         self.previous_button.clicked.connect(self.prev_button_clicked)
         self.prev_prev_button.clicked.connect(self.prev_prev_button_clicked)
 
+        self.switch_visible_trans.stateChanged.connect(self.visible_trans_func)
         self.switch_use_cursor.stateChanged.connect(self.use_cursor_func)
         self.switch_night_mode.stateChanged.connect(lambda: self.toggle_theme())
         self.switch_center.stateChanged.connect(self.center)
@@ -519,7 +527,9 @@ class MyWindow(QWidget):
         swith_autoplay = self.google_Translate_to_trans_with_eng("Autoplay") + " (Space)"
         playback_speed = self.google_Translate_to_trans_with_eng("Playback speed")
         left_click_nav = self.google_Translate_to_trans_with_eng("Left click navigation")
+        visib_trans = self.google_Translate_to_trans_with_eng("Translation display") + " (T)"
 
+        self.switch_visible_trans.setText(visib_trans)
         self.switch_use_cursor.setText(left_click_nav)
         self.playback_speed_label.setText(playback_speed)
         self.previous_button.setText(previous_button_text)
@@ -748,9 +758,11 @@ class MyWindow(QWidget):
                                    QColor(42, 130, 218),
                                    QColor(42, 130, 218),
                                    QColor(0, 0, 0),
-                                   QColor(255, 255, 0),
                                    QColor(255, 0, 0),
-                                   QColor(0, 0, 0)
+                                   QColor(255, 255, 0),
+                                   QColor(255, 255, 255),
+                                   QColor(255, 255, 0),
+                                   QColor(255, 255, 255)
                                    )
 
         self.day_mode_default = (QColor(255, 255, 255),
@@ -766,18 +778,21 @@ class MyWindow(QWidget):
                                  QColor(0, 122, 255),
                                  QColor(0, 122, 255),
                                  QColor(255, 255, 255),
-                                 QColor(128, 64, 48),
                                  QColor(255, 0, 0),
-                                 QColor(255, 255, 255)
+                                 QColor(128, 64, 48),
+                                 QColor(0, 0, 0),
+                                 QColor(128, 64, 48),
+                                 QColor(0, 0, 0)
                                  )
 
         # Загрузка настроек
+        self.visible_trans = self.settings.value("visible_trans", "true")
         self.use_cursor = self.settings.value("use_cursor", "true")
         self.auto_play = self.settings.value("auto_play", "false")
         self.cache_Music = self.settings.value("cache_Music", {})
         self.night_mod_colors = self.settings.value('night_mod_colors',
-                                                    [color.name() for color in self.night_mode_default])
-        self.day_mode_colors = self.settings.value('day_mode_colors', [color.name() for color in self.day_mode_default])
+                                                    [color for color in self.night_mode_default])
+        self.day_mode_colors = self.settings.value('day_mode_colors', [color for color in self.day_mode_default])
         self.default_language_orig = self.settings.value('default_language_orig', 'en')
         self.default_language_trans = self.settings.value('default_language_trans', 'en')
         self.bookmarks_book = self.settings.value("bookmarks_book", {})
@@ -799,6 +814,7 @@ class MyWindow(QWidget):
         self.window_geometry_height = self.settings.value("window_geometry_height", 600)
 
         # Преобразование типов данных
+        self.visible_trans = True if self.visible_trans.lower() == "true" else False
         self.use_cursor = True if self.use_cursor.lower() == "true" else False
         self.auto_play = True if self.auto_play.lower() == "true" else False
         self.night_mode = True if self.night_mode.lower() == "true" else False
@@ -825,7 +841,7 @@ class MyWindow(QWidget):
                                        "Window background color", "Window text color", "Base color",
                                        "Alternate base color", "Tooltip base color",
                                        "Tooltip text color", "Text color", "Button color", "Button text color",
-                                       "Bright text color", "Link color", "Highlight color", "Highlighted text color", "Highlighting a sentence", "Header highlighting", "Unselected text", "default settings"]
+                                       "Bright text color", "Link color", "Highlight color", "Highlighted text color","Header highlighting",  "Sentence highlighting (original text)", "Unselected text (original text)", "Sentence highlighting (translated text)", "Unselected text (translated text)", "default settings"]
         self.translate_dialog_windows = [self.google_Translate_init(i) for i in self.orgignal_dialog_window]
 
     def read_txt(self):
@@ -1025,6 +1041,12 @@ class MyWindow(QWidget):
         self.thread.finished.connect(self.auto_go_next)
         self.thread.start()
 
+    def visible_trans_func(self, state):
+        print(inspect.currentframe().f_code.co_name)
+
+        self.settings.setValue("visible_trans", self.switch_visible_trans.isChecked())
+        self.output_paragraph()
+
     def center(self, state):
         print(inspect.currentframe().f_code.co_name)
         if state == Qt.Checked:
@@ -1032,9 +1054,9 @@ class MyWindow(QWidget):
         else:
             self.text_browser.setAlignment(QtCore.Qt.AlignLeft)
 
-        self.output_paragraph()
-        self.settings.setValue("center_setting", self.switch_center.isChecked())
 
+        self.settings.setValue("center_setting", self.switch_center.isChecked())
+        self.output_paragraph()
 
     def use_cursor_func(self, state):
         print(inspect.currentframe().f_code.co_name)
@@ -1224,15 +1246,36 @@ class MyWindow(QWidget):
             self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[15].name(), self.filter_text(text + end_space)))
     def out_marker1(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[14].name(), self.filter_text(text + end_space)))
+        else:
+            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.filter_text(text + end_space)))
+
+    def out_marker2(self, text, end_space="\n"):
+        if self.switch_night_mode.isChecked():
             self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.filter_text(text + end_space)))
         else:
             self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[13].name(), self.filter_text(text + end_space)))
 
-    def out_marker2(self, text, end_space="\n"):
-        if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[14].name(), self.filter_text(text + end_space)))
-        else:
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.filter_text(text + end_space)))
+
+
+    def out_trans(self, text, end_space="\n"):
+        if self.switch_visible_trans.isChecked():
+            if self.switch_night_mode.isChecked():
+                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[17].name(), self.filter_text(text + end_space)))
+            else:
+                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[17].name(), self.filter_text(text + end_space)))
+    def out_marker1_trans(self, text, end_space="\n"):
+        if self.switch_visible_trans.isChecked():
+            if self.switch_night_mode.isChecked():
+                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[16].name(), self.filter_text(text + end_space)))
+            else:
+                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.filter_text(text + end_space)))
+
+
+
+
+
+
 
     def formint_output_text(self):
         print(inspect.currentframe().f_code.co_name)
@@ -1280,16 +1323,16 @@ class MyWindow(QWidget):
             else:
                 self.out(self.list_sentences[i], " ")
 
-        self.out("\n")
+        self.out_trans("\n")
 
         if not self.switch_center.isChecked():
-            self.out("\t", "")
+            self.out_trans("\t", "")
 
         for i in range(len(self.list_sentences_trans)):
             if self.count == i:
-                self.out_marker1(self.list_sentences_trans[i], " ")
+                self.out_marker1_trans(self.list_sentences_trans[i], " ")
             else:
-                self.out(self.list_sentences_trans[i], " ")
+                self.out_trans(self.list_sentences_trans[i], " ")
 
 
 
