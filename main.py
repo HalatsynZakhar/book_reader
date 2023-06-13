@@ -14,9 +14,9 @@ import nltk
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QSettings, QEvent
-from PyQt5.QtGui import QPalette, QColor, QIntValidator
+from PyQt5.QtGui import QPalette, QColor, QIntValidator, QFontDatabase, QFont
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, \
-    QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog, QDoubleSpinBox
+    QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog, QDoubleSpinBox, QFontComboBox
 from lxml import etree
 import pygame
 
@@ -127,6 +127,12 @@ class MyWindow(QWidget):
         self.font_size_label = QLabel(self.google_Translate_init("Font size"))
         font_layout.addWidget(self.font_size_label)
         self.font_size_label.setAlignment(QtCore.Qt.AlignCenter)
+
+
+        # Создаем поле выбора шрифтов
+        self.font_combobox = QFontComboBox()
+        choice_lang_and_font_layout.addWidget(self.font_combobox)
+        self.font_combobox.setCurrentFont(QFont(self.current_font))
 
         # создаем spinBox и добавляем его в горизонтальный лейаут
         self.spin_box = QSpinBox()
@@ -315,6 +321,7 @@ class MyWindow(QWidget):
         self.setLayout(main_layout)
 
         # связываем кнопку со слотом
+        self.font_combobox.lineEdit().returnPressed.connect(self.handle_font_change)
 
         self.language_combo_original.currentIndexChanged.connect(self.language_changed_original)
         self.language_combo_translate.currentIndexChanged.connect(self.language_changed_translate)
@@ -360,7 +367,25 @@ class MyWindow(QWidget):
         if self.active_mode == "song":
             self.setWindowTitle(" ".join(self.last_song))
 
+    def handle_font_change(self):
+        print(inspect.currentframe().f_code.co_name)
+
+        font = self.font_combobox.currentFont().family()
+        font_db = QFontDatabase()
+        # Проверяем, является ли шрифт допустимым
+        if font not in font_db.families():
+            # Если шрифт не допустим, то сбрасываем значение поля на предыдущее значение
+            self.font_combobox.setCurrentFont(QFont(self.current_font))
+            return
+
+
+        self.current_font = font
+        self.font_combobox.clearFocus()
+        self.settings.setValue("current_font", self.current_font)
+        self.output_paragraph()
     def spin_box_playback_speed_func(self):
+        print(inspect.currentframe().f_code.co_name)
+
         self.settings.setValue("playback_speed", self.spin_box_playback_speed.value())
     def auto_go_next(self):
         print(inspect.currentframe().f_code.co_name)
@@ -786,6 +811,7 @@ class MyWindow(QWidget):
                                  )
 
         # Загрузка настроек
+        self.current_font = self.settings.value("current_font", "Arial")
         self.visible_trans = self.settings.value("visible_trans", "true")
         self.use_cursor = self.settings.value("use_cursor", "true")
         self.auto_play = self.settings.value("auto_play", "false")
@@ -1241,35 +1267,35 @@ class MyWindow(QWidget):
 
     def out(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[15].name(), self.filter_text(text + end_space)))
+            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[15].name(), self.current_font, self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[15].name(), self.filter_text(text + end_space)))
+            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[15].name(), self.current_font, self.filter_text(text + end_space)))
     def out_marker1(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[14].name(), self.filter_text(text + end_space)))
+            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[14].name(), self.current_font, self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.filter_text(text + end_space)))
+            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.current_font, self.filter_text(text + end_space)))
 
     def out_marker2(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.filter_text(text + end_space)))
+            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.current_font, self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[13].name(), self.filter_text(text + end_space)))
+            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[13].name(), self.current_font, self.filter_text(text + end_space)))
 
 
 
     def out_trans(self, text, end_space="\n"):
         if self.switch_visible_trans.isChecked():
             if self.switch_night_mode.isChecked():
-                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[17].name(), self.filter_text(text + end_space)))
+                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[17].name(), self.current_font, self.filter_text(text + end_space)))
             else:
-                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[17].name(), self.filter_text(text + end_space)))
+                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[17].name(), self.current_font, self.filter_text(text + end_space)))
     def out_marker1_trans(self, text, end_space="\n"):
         if self.switch_visible_trans.isChecked():
             if self.switch_night_mode.isChecked():
-                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.night_mod_colors[16].name(), self.filter_text(text + end_space)))
+                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
             else:
-                self.text_browser.insertHtml('<span style="color: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.filter_text(text + end_space)))
+                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
 
 
 
