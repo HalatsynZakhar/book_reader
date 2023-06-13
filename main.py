@@ -21,6 +21,7 @@ from lxml import etree
 import pygame
 
 from AudioThread import AudioThread
+from Cached import Cached
 from CachedTranslator import CachedTranslator
 from MyTextBrowser import MyTextBrowser
 
@@ -39,7 +40,8 @@ class MyWindow(QWidget):
 
 
         # Создание экземпляра CachedTranslator
-        self.translator = CachedTranslator()
+        self.translator = CachedTranslator("cached_translate.xml")
+        self.cached_Music = Cached("cached_music.xml")
 
         self.download_settings()
 
@@ -611,11 +613,6 @@ class MyWindow(QWidget):
     def get_musinfo(self, lyrict_title_list):
         print(inspect.currentframe().f_code.co_name + ": ", end=" ")
 
-        # Проверяем, есть ли данные в кеше
-        if lyrict_title_list in self.cache_Music:
-            print("cache")
-            return self.cache_Music[lyrict_title_list]
-
         try:
             index_of_dash = lyrict_title_list.index("-")
             group_and_music = ("-".join(lyrict_title_list[:index_of_dash]), "-".join(
@@ -641,20 +638,16 @@ class MyWindow(QWidget):
                 text_result += i.text + "\n"
 
             # Сохраняем данные в кеше
-            self.cache_Music[lyrict_title_list] = text_result
+            self.cached_Music.set(lyrict_title_list, text_result)
         except:
             return ""
-        print("musinfo")
+        print("https://ru.musinfo.net/lyrics/")
         return text_result
 
 
     def get_muztext(self, lyrict_title_list):
         print(inspect.currentframe().f_code.co_name + ": ", end=" ")
 
-        # Проверяем, есть ли данные в кеше
-        if lyrict_title_list in self.cache_Music:
-            print("cache")
-            return self.cache_Music[lyrict_title_list]
         try:
             index_of_dash = lyrict_title_list.index("-")
             lyrict_title_and_song = lyrict_title_list[:index_of_dash] + lyrict_title_list[index_of_dash + 1:]
@@ -672,16 +665,19 @@ class MyWindow(QWidget):
             lyrics = soup.find('table', {'class': 'orig'})
 
             # Сохраняем данные в кеше
-            self.cache_Music[lyrict_title_list] = lyrics.text
+            self.cached_Music.set(lyrict_title_list, lyrics.text)
         except:
             return ""
-        print("lyrics.text")
+        print("https://muztext.com/lyrics/")
         return lyrics.text
 
     def read_song(self):
         print(inspect.currentframe().f_code.co_name)
 
-        self.text = self.get_muztext(self.last_song)
+        print("Music: ", end="")
+        self.text = self.cached_Music.get(self.last_song)
+        if self.text == "":
+            self.text = self.get_muztext(self.last_song)
         if self.text == "":
             self.text = self.get_musinfo(self.last_song)
 
@@ -715,22 +711,12 @@ class MyWindow(QWidget):
         validator = QIntValidator(1, len(self.list_paragraph), self)
         self.input_field.setValidator(validator)
 
-
-
-
-
-
         self.formint_output_text()
-
-
 
     def download_settings(self):
         print(inspect.currentframe().f_code.co_name)
 
         self.settings = QSettings("halatsyn_zakhar", "book_reader")
-
-        # Загрузка кеша из QSettings
-        self.translator.load_cache_from_settings(self)
 
         self.languages = {
             "Azərbaycan dili": "az",
@@ -815,7 +801,6 @@ class MyWindow(QWidget):
         self.visible_trans = self.settings.value("visible_trans", "true")
         self.use_cursor = self.settings.value("use_cursor", "true")
         self.auto_play = self.settings.value("auto_play", "false")
-        self.cache_Music = self.settings.value("cache_Music", {})
         self.night_mod_colors = self.settings.value('night_mod_colors',
                                                     [color for color in self.night_mode_default])
         self.day_mode_colors = self.settings.value('day_mode_colors', [color for color in self.day_mode_default])
@@ -1298,11 +1283,6 @@ class MyWindow(QWidget):
                 self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
 
 
-
-
-
-
-
     def formint_output_text(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -1389,7 +1369,6 @@ class MyWindow(QWidget):
         print(inspect.currentframe().f_code.co_name)
 
         # Сохранение настроек
-        self.settings.setValue("cache_Music", self.cache_Music)
         self.settings.setValue("window_geometry_x", self.geometry().x())
         self.settings.setValue("window_geometry_y", self.geometry().y())
         self.settings.setValue("window_geometry_width", self.geometry().width())
@@ -1400,10 +1379,11 @@ class MyWindow(QWidget):
 
         # вызываем метод save() перед закрытием окна
         self.save_settings()
-        self.translator.save_cache_to_settings(self)
-
         self.stop_flag.set()
         pygame.quit()
+
+        self.translator.close()
+        self.cached_Music.save_cache_to_file()
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)
 

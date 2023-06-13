@@ -38,6 +38,7 @@ This code used the following libraries:
 * sys is for accessing system functions and variables.
 * inspect - debugging
 * requests - get lyrics
+* xml.etree.ElementTree  - to work with .xml files. Save cache to minimize internet requests
 
 How to use?
 
