@@ -112,6 +112,7 @@ class MyWindow(QWidget):
         self.choice_trans_lang_label = QLabel(self.google_Translate_init("Native language: "))
         translate_lang_layout.addWidget(self.choice_trans_lang_label)
 
+
         self.language_combo_translate = QComboBox()
         for language, code in self.languages.items():
             self.language_combo_translate.addItem(language, code)
@@ -124,14 +125,13 @@ class MyWindow(QWidget):
         choice_lang_and_font_layout.addLayout(font_layout)
 
         # создаем label "Font size" и добавляем его в горизонтальный лейаут
-        self.font_size_label = QLabel(self.google_Translate_init("Font size"))
+        self.font_size_label = QLabel(self.google_Translate_init("Font:"))
         font_layout.addWidget(self.font_size_label)
-        self.font_size_label.setAlignment(QtCore.Qt.AlignCenter)
 
 
         # Создаем поле выбора шрифтов
         self.font_combobox = QFontComboBox()
-        choice_lang_and_font_layout.addWidget(self.font_combobox)
+        font_layout.addWidget(self.font_combobox)
         self.font_combobox.setCurrentFont(QFont(self.current_font))
 
         # создаем spinBox и добавляем его в горизонтальный лейаут
@@ -532,7 +532,7 @@ class MyWindow(QWidget):
         prev_prev_button_text = self.google_Translate_to_trans_with_eng("Previous") + " (Left)"
         lang_of_study_label_text = self.google_Translate_to_trans_with_eng("Language of study: ")
         choice_trans_lang_label_text = self.google_Translate_to_trans_with_eng("Native language: ")
-        font_size_label_text = self.google_Translate_to_trans_with_eng("Font size")
+        font_size_label_text = self.google_Translate_to_trans_with_eng("Font: ")
         repaet_button_text = self.google_Translate_to_trans_with_eng("Repeat playback") + " (R)"
         switch_audio_text = self.google_Translate_to_trans_with_eng("Audio") + " (V)"
         switch_audio_text_slow_text = self.google_Translate_to_trans_with_eng("Slow playback")
@@ -811,7 +811,7 @@ class MyWindow(QWidget):
                                  )
 
         # Загрузка настроек
-        self.current_font = self.settings.value("current_font", "Arial")
+        self.current_font = self.settings.value("current_font", "Tahoma")
         self.visible_trans = self.settings.value("visible_trans", "true")
         self.use_cursor = self.settings.value("use_cursor", "true")
         self.auto_play = self.settings.value("auto_play", "false")
