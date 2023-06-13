@@ -2,7 +2,6 @@ from PyQt5.QtCore import QXmlStreamWriter, QFile, QIODevice
 import xml.etree.ElementTree as ET
 class Cached():
     def __init__(self, cache_file, cache_size=1000):
-        super().__init__()
         self.cache_size = cache_size
         self.cache_file = cache_file
         self.load_cache_from_file()

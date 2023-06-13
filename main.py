@@ -21,7 +21,6 @@ from Cached import Cached
 from CachedTranslator import CachedTranslator
 from MyTextBrowser import MyTextBrowser
 
-
 class MyWindow(QWidget):
     def __init__(self):
         print(inspect.currentframe().f_code.co_name)
