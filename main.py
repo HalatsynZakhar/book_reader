@@ -350,6 +350,11 @@ class MyWindow(QWidget):
         self.spin_box.setMaximum(999)
 
         # устанавливаем обработчик событий для поля input_field
+
+        self.input_path_to_file.installEventFilter(self)
+        self.input_find_songs.installEventFilter(self)
+
+
         self.input_field.editingFinished.connect(self.handle_editing_finished)
         self.input_path_to_file.editingFinished.connect(self.handle_editing_path)
         self.input_find_songs.editingFinished.connect(self.handle_editing_song)
@@ -363,6 +368,14 @@ class MyWindow(QWidget):
             self.setWindowTitle("{}".format(self.last_book))
         if self.active_mode == "song":
             self.setWindowTitle(" ".join(self.last_song))
+
+
+    def eventFilter(self, obj, event):
+        if obj is self.input_path_to_file and event.type() == QtCore.QEvent.FocusIn:
+            self.input_path_to_file.setText(self.input_path_to_file.placeholderText())
+        elif obj == self.input_find_songs and event.type() == QtCore.QEvent.FocusIn:
+            self.input_find_songs.setText(self.input_find_songs.placeholderText())
+        return super().eventFilter(obj, event)
 
     def handle_font_change(self):
         print(inspect.currentframe().f_code.co_name)
@@ -924,40 +937,125 @@ class MyWindow(QWidget):
 
         self.formint_output_text()
     def handle_editing_song(self):
-        print(inspect.currentframe().f_code.co_name)
+        print(inspect.currentframe().f_code.co_name + ": ", end="")
 
+        if self.input_find_songs.text() == "" and self.active_mode == "song":
+            print("cond1")
+
+            self.input_find_songs.clearFocus()
+
+            return
+
+        if self.input_find_songs.text() == "" and self.active_mode == "book":
+            print("cond2")
+
+            self.active_mode = "song"
+            self.setWindowTitle("{}".format(" ".join(self.last_song)))
+            self.read_song()
+            self.settings.setValue("active_mode", self.active_mode)
+
+            self.input_find_songs.clearFocus()
+            return
+
+        text_fil = self.input_find_songs.text().replace("'", " ")
+        find_text_filtered = tuple(filter(lambda x: x != '', map(str.lower, text_fil.split())))
+
+        if find_text_filtered == self.last_song and self.active_mode == "song":
+            print("cond3")
+
+            self.input_find_songs.clear()
+            self.input_find_songs.clearFocus()
+            return
+
+        if find_text_filtered == self.last_song and self.active_mode == "book":
+            print("cond4")
+
+            self.active_mode = "song"
+            self.read_song()
+            self.settings.setValue("active_mode", self.active_mode)
+            self.setWindowTitle("{}".format(" ".join(self.last_song)))
+            self.input_find_songs.clear()
+            self.input_find_songs.clearFocus()
+
+            return
+
+        print("cond5")
         self.active_mode = "song"
-        if self.input_find_songs.text() != "":
-            text_fil = self.input_find_songs.text().replace("'", " ")
-            find_text_filtered = tuple(filter(lambda x: x != '', map(str.lower, text_fil.split())))
-            self.last_song = find_text_filtered
-            self.settings.setValue("last_song", self.last_song)
+        self.last_song = find_text_filtered
+
+        self.settings.setValue("last_song", self.last_song)
 
         self.input_find_songs.setPlaceholderText("{}".format(" ".join(self.last_song)))
         self.setWindowTitle("{}".format(" ".join(self.last_song)))
 
+        self.read_song()
+        self.input_find_songs.clear()
         self.input_find_songs.clearFocus()
 
-        self.read_song()
-        self.settings.setValue("active_mode", self.active_mode)
+
     def handle_editing_path(self):
-        print(inspect.currentframe().f_code.co_name)
+        print(inspect.currentframe().f_code.co_name + ": ", end="")
 
+        if self.input_path_to_file.text() == "" and self.active_mode == "book":
+            print("cond1")
+
+            self.input_path_to_file.clearFocus()
+
+
+            return
+        if self.input_path_to_file.text() == "" and self.active_mode == "song":
+            print("cond2")
+
+            self.active_mode = "book"
+            self.settings.setValue("active_mode", self.active_mode)
+
+            self.setWindowTitle("{}".format(self.last_book))
+            self.read_txt()
+
+            self.input_path_to_file.clearFocus()
+
+            return
+
+        path = self.input_path_to_file.text()
+        path = path.strip()
+        absolute_path = os.path.abspath(path)
+
+        if absolute_path == self.last_book and self.active_mode == "book":
+            print("cond3")
+            self.input_path_to_file.clear()
+            self.input_path_to_file.clearFocus()
+            return
+
+        if absolute_path == self.last_book and self.active_mode == "song":
+            print("cond4")
+
+            self.active_mode = "book"
+            self.setWindowTitle("{}".format(self.last_book))
+
+
+
+            self.read_txt()
+            self.settings.setValue("active_mode", self.active_mode)
+
+            self.input_path_to_file.clear()
+            self.input_path_to_file.clearFocus()
+
+            return
+
+        print("cond5")
         self.active_mode = "book"
-        if self.input_path_to_file.text() != "":
-            path = self.input_path_to_file.text()
-            path = path.strip()
-            absolute_path = os.path.abspath(path)
+        self.settings.setValue("active_mode", self.active_mode)
 
-            self.last_book = absolute_path
-            self.settings.setValue("last_book", self.last_book)
+        self.last_book = absolute_path
+        self.settings.setValue("last_book", self.last_book)
         self.input_path_to_file.setPlaceholderText("{}".format(self.last_book))
         self.setWindowTitle("{}".format(self.last_book))
 
-        self.input_path_to_file.clearFocus()
-
         self.read_txt()
-        self.settings.setValue("active_mode", self.active_mode)
+
+
+        self.input_path_to_file.clear()
+        self.input_path_to_file.clearFocus()
 
     def handle_editing_finished(self):
         print(inspect.currentframe().f_code.co_name)

@@ -15,7 +15,7 @@ class MyTextBrowser(QTextBrowser):
         pixmap = QPixmap('img/left.png')
         self.left_cursor = QCursor(pixmap)
 
-        pixmap = QPixmap('img/rigth.png')
+        pixmap = QPixmap('img/right.png')
         self.right_cursor = QCursor(pixmap)
 
     def wheelEvent(self, event):
