@@ -44,15 +44,6 @@ How to use?
 
 Create virt env
 * Download and install Python https://www.python.org/downloads/ (my version 3.11.3 . When installing, check all the boxes that are offered)
-* Open command prompt and install virtual environment (python -m venv name)
-* Go to directory (cd name)
-* environment activation (Scripts\activate.bat)
-* install dependencies: pip install requests
-* Download files *.py and add to directory name
-* Install the necessary packages for work (pip install requests beautifulsoup4 nltk googletrans==3.1.0a0 gtts python-vlc PyQt5 lxml)
-* Run the program: (python main.py)
-
-For the next run:
-* Go to directory (cd name)
-* environment activation (Scripts\activate.bat)
-* Run the program (python main.py)
+* Сlone the project by downloading the archive or use the command line: git clone --depth 1 https://github.com/username/repo.git 
+* Run install-package.py or use the command: pip install qtpy pygame requests beautifulsoup4 nltk googletrans==3.1.0a0 gtts python-vlc PyQt5 lxml
+* Run main.py or use the command: (python main.py)

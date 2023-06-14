@@ -1,7 +1,7 @@
 import subprocess
 
 # список необходимых модулей
-required_modules = ['requests', 'beautifulsoup4', 'nltk', 'googletrans==3.1.0a0', 'gtts', 'python-vlc', 'PyQt5', 'lxml']
+required_modules = ['qtpy', 'pygame', 'requests', 'beautifulsoup4', 'nltk', 'googletrans==3.1.0a0', 'gtts', 'python-vlc', 'PyQt5', 'lxml']
 
 # получаем список установленных модулей с помощью команды pip freeze
 installed_modules = subprocess.check_output(['pip', 'freeze']).decode('utf-8').split('\n')
