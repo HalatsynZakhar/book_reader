@@ -7,6 +7,7 @@ import chardet
 import requests
 from bs4 import BeautifulSoup
 import nltk
+import langcodes
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QSettings, QEvent
@@ -1249,7 +1250,7 @@ class MyWindow(QWidget):
         if self.count == 0:
             if self.bookmark != 0:
                 self.bookmark -= 1
-            self.count = len(nltk.sent_tokenize(self.list_paragraph[self.bookmark])) - 1
+            self.count = len(nltk.sent_tokenize(self.list_paragraph[self.bookmark], langcodes.Language(self.language_combo_original.currentData()).language_name())) - 1
             self.formint_output_text()
         else:
             self.count -= 1
@@ -1383,11 +1384,13 @@ class MyWindow(QWidget):
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
 
-        self.list_sentences = nltk.sent_tokenize(self.currentParagraph)
+        temp = self.language_combo_original.currentData()
+        temp = langcodes.Language(temp).language_name()
+        self.list_sentences = nltk.sent_tokenize(self.currentParagraph, language=temp)
 
         self.text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph)
 
-        self.list_sentences_trans = nltk.sent_tokenize(self.text_trans)
+        self.list_sentences_trans = nltk.sent_tokenize(self.text_trans, language=langcodes.Language(self.language_combo_translate.currentData()).language_name())
 
         self.output_paragraph()
 
