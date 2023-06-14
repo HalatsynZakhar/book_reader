@@ -1,6 +1,7 @@
 import html
 import inspect
 import os
+import re
 import sys
 import threading
 import chardet
@@ -8,6 +9,8 @@ import requests
 from bs4 import BeautifulSoup
 import nltk
 import langcodes
+from unidecode import unidecode
+
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QSettings, QEvent
@@ -1378,19 +1381,60 @@ class MyWindow(QWidget):
 
 
     def formint_output_text(self):
-        print(inspect.currentframe().f_code.co_name)
+        print(inspect.currentframe().f_code.co_name + ": ", end="")
 
         self.hide_curren_and_all_page()
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
 
-        temp = self.language_combo_original.currentData()
-        temp = langcodes.Language(temp).language_name()
-        self.list_sentences = nltk.sent_tokenize(self.currentParagraph, language=temp)
+        lang_orig = self.language_combo_original.currentData()
+        lang_orig = langcodes.Language(lang_orig).language_name()
+        self.list_sentences = nltk.sent_tokenize(self.currentParagraph, language=lang_orig)
 
-        self.text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph)
+        text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph)
 
-        self.list_sentences_trans = nltk.sent_tokenize(self.text_trans, language=langcodes.Language(self.language_combo_translate.currentData()).language_name())
+        lang_trans = self.language_combo_translate.currentData()
+        lang_trans = langcodes.Language(lang_trans).language_name()
+        self.list_sentences_trans = nltk.sent_tokenize(text_trans, language=lang_trans)
+
+        print(1)
+        if len(self.list_sentences) != len(self.list_sentences_trans):
+            print(2)
+            text = "".join([i if i.isalpha() else unidecode(i) for i in self.currentParagraph])
+            self.list_sentences = nltk.sent_tokenize(text, language=lang_orig)
+            if len(self.list_sentences) != len(self.list_sentences_trans):
+                print(3)
+                text_translate = self.google_Translate_to_trans_with_random_lang(text)
+                self.list_sentences_trans = nltk.sent_tokenize(text_translate, language=lang_trans)
+                if len(self.list_sentences) != len(self.list_sentences_trans):
+                    print(4)
+                    self.list_sentences = re.findall(r'(?s)(.*?(?:[.?!]|$))', text)
+                    if not self.list_sentences:
+                        self.list_sentences = [text]
+                    self.list_sentences_trans = re.findall(r'(?s)(.*?(?:[.?!]|$))', text_translate)
+                    if not self.list_sentences_trans:
+                        self.list_sentences_trans = [text_translate]
+                    if len(self.list_sentences) != len(self.list_sentences_trans):
+                        print(5)
+                        self.list_sentences = re.findall(r'[.!?]+[\s\n]+', text)
+                        if not self.list_sentences:
+                            self.list_sentences = [text]
+                        self.list_sentences_trans = re.findall(r'[.!?]+[\s\n]+', text_translate)
+                        if not self.list_sentences_trans:
+                            self.list_sentences_trans = [text_translate]
+                        if len(self.list_sentences) != len(self.list_sentences_trans):
+                            print(6)
+                            self.list_sentences = re.findall(r"[^\.!?]*\.", text)
+                            if not self.list_sentences:
+                                self.list_sentences = [text]
+                            self.list_sentences_trans = re.findall("[^\.!?]*\.", text_translate)
+                            if not self.list_sentences_trans:
+                                self.list_sentences_trans = [text_translate]
+                            if len(self.list_sentences) != len(self.list_sentences_trans):
+                                print(7)
+                                self.list_sentences = [self.currentParagraph]
+                                self.list_sentences_trans = [text_trans]
+
 
         self.output_paragraph()
 
