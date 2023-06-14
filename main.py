@@ -1253,8 +1253,11 @@ class MyWindow(QWidget):
         if self.count == 0:
             if self.bookmark != 0:
                 self.bookmark -= 1
-            self.count = len(nltk.sent_tokenize(self.list_paragraph[self.bookmark], langcodes.Language(self.language_combo_original.currentData()).language_name())) - 1
-            self.formint_output_text()
+
+            self.count = 0
+            self.formint_output_text(out=False)
+            self.count = len(self.list_sentences) - 1
+            self.output_paragraph()
         else:
             self.count -= 1
             self.output_paragraph()
@@ -1380,7 +1383,7 @@ class MyWindow(QWidget):
                 self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
 
 
-    def formint_output_text(self):
+    def formint_output_text(self, out=True):
         print(inspect.currentframe().f_code.co_name + ": ", end="")
 
         self.hide_curren_and_all_page()
@@ -1397,47 +1400,124 @@ class MyWindow(QWidget):
         lang_trans = langcodes.Language(lang_trans).language_name()
         self.list_sentences_trans = nltk.sent_tokenize(text_trans, language=lang_trans)
 
-        print(1)
+        print(1, end="")
         if len(self.list_sentences) != len(self.list_sentences_trans):
-            print(2)
+            print(2, end="")
             text = "".join([i if i.isalpha() else unidecode(i) for i in self.currentParagraph])
             self.list_sentences = nltk.sent_tokenize(text, language=lang_orig)
+
+            self.list_sentences = [x for x in self.list_sentences if x]
+            self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
+
             if len(self.list_sentences) != len(self.list_sentences_trans):
-                print(3)
+                print(3, end="")
                 text_translate = self.google_Translate_to_trans_with_random_lang(text)
                 self.list_sentences_trans = nltk.sent_tokenize(text_translate, language=lang_trans)
+
+                self.list_sentences = [x for x in self.list_sentences if x]
+                self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
+
                 if len(self.list_sentences) != len(self.list_sentences_trans):
-                    print(4)
+                    print(4, end="")
                     self.list_sentences = re.findall(r'(?s)(.*?(?:[.?!]|$))', text)
-                    if not self.list_sentences:
-                        self.list_sentences = [text]
                     self.list_sentences_trans = re.findall(r'(?s)(.*?(?:[.?!]|$))', text_translate)
-                    if not self.list_sentences_trans:
-                        self.list_sentences_trans = [text_translate]
+
+                    self.list_sentences = [x for x in self.list_sentences if x]
+                    self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
+
                     if len(self.list_sentences) != len(self.list_sentences_trans):
-                        print(5)
-                        self.list_sentences = re.findall(r'[.!?]+[\s\n]+', text)
-                        if not self.list_sentences:
-                            self.list_sentences = [text]
-                        self.list_sentences_trans = re.findall(r'[.!?]+[\s\n]+', text_translate)
-                        if not self.list_sentences_trans:
-                            self.list_sentences_trans = [text_translate]
+                        print(5, end="")
+
+                        self.list_sentences = [""]
+                        count = 0
+                        for i in text:
+                            if i == ".":
+                                self.list_sentences.append("")
+                                count += 1
+
+                            self.list_sentences[count] += i
+
+                        self.list_sentences_trans = [""]
+                        count = 0
+                        for i in text_translate:
+                            if i == ".":
+                                self.list_sentences_trans.append("")
+                                count += 1
+                            self.list_sentences_trans[count] += i
+
+                        self.list_sentences = [x for x in self.list_sentences if x]
+                        self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
+
                         if len(self.list_sentences) != len(self.list_sentences_trans):
-                            print(6)
-                            self.list_sentences = re.findall(r"[^\.!?]*\.", text)
-                            if not self.list_sentences:
-                                self.list_sentences = [text]
-                            self.list_sentences_trans = re.findall("[^\.!?]*\.", text_translate)
-                            if not self.list_sentences_trans:
-                                self.list_sentences_trans = [text_translate]
+                            print(6, end="")
+
+                            self.list_sentences = [""]
+                            count = 0
+                            for i in text:
+                                if i.isupper():
+                                    self.list_sentences.append("")
+                                    count += 1
+
+                                self.list_sentences[count] += i
+
+                            self.list_sentences_trans = [""]
+                            count = 0
+                            for i in text_translate:
+                                if i.isupper():
+                                    self.list_sentences_trans.append("")
+                                    count += 1
+                                self.list_sentences_trans[count] += i
+
+                            self.list_sentences = [x for x in self.list_sentences if x]
+                            self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
+
+                            count = 10
+                            while len(self.list_sentences) != len(self.list_sentences_trans):
+                                print(7, end="")
+                                self.parsing_paragraph(text, text_translate, count)
+                                count += 10
+
+                            """
                             if len(self.list_sentences) != len(self.list_sentences_trans):
-                                print(7)
+                                print(9, end="")
                                 self.list_sentences = [self.currentParagraph]
                                 self.list_sentences_trans = [text_trans]
+                            """
+        print()
+
+        if out:
+            self.output_paragraph()
 
 
-        self.output_paragraph()
+    def parsing_paragraph(self, text, text_translate, max):
+        self.list_sentences = [""]
+        count = 0
+        check = 0
+        for i in text:
+            if i == " ":
+                if check == max:
+                    self.list_sentences.append("")
+                    count += 1
+                    check = 0
 
+                check += 1
+            self.list_sentences[count] += i
+
+        self.list_sentences_trans = [""]
+        count = 0
+        check = 0
+        for i in text_translate:
+            if i == " ":
+                if check == max:
+                    self.list_sentences_trans.append("")
+                    count += 1
+                    check = 0
+
+                check += 1
+            self.list_sentences_trans[count] += i
+
+        self.list_sentences = [x for x in self.list_sentences if x]
+        self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
     def output_paragraph(self):
         print(inspect.currentframe().f_code.co_name)
 
