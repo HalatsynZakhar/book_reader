@@ -4,10 +4,14 @@ import os
 import re
 import sys
 import threading
+from itertools import product
+
 import chardet
 import requests
 from bs4 import BeautifulSoup
 import nltk
+if not nltk.data.find('tokenizers/punkt'):
+    nltk.download('punkt')
 import langcodes
 from unidecode import unidecode
 
@@ -24,12 +28,16 @@ from AudioThread import AudioThread
 from Cached import Cached
 from CachedTranslator import CachedTranslator
 from MyTextBrowser import MyTextBrowser
+from Nltk_decorator import Nltk_decorator
+
 
 class MyWindow(QWidget):
     def __init__(self):
         print(inspect.currentframe().f_code.co_name)
 
         super().__init__()
+
+        self.nltk_decorator = Nltk_decorator()
 
         pygame.init()
         # эта биллиотека используется, чтобы избежать преырвания в блютуз наушинках
@@ -47,14 +55,21 @@ class MyWindow(QWidget):
         self.create_GUI()
 
         self.toggle_theme(False)
+
+        self.create_comb(3)
         # чтение файла (указан путь к примеру файлу txt) и генерация страницы далее
         if self.active_mode == "book":
             self.read_txt()
         elif self.active_mode == "song":
             self.read_song()
 
-
-
+    def create_comb(self, n):
+        combo = ".?! "
+        self.combinations = [None, ""]
+        for i in range(1, n + 1):
+            for combo_tuple in product(combo, repeat=i):
+                combination = "".join(combo_tuple)
+                self.combinations.append(combination)
     def create_GUI(self):
         print(inspect.currentframe().f_code.co_name)
         # создаем главный вертикальный лейаут
@@ -1383,8 +1398,10 @@ class MyWindow(QWidget):
                 self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
 
     def filt_orig_and_trans_sentence(self):
-        self.list_sentences = [x for x in self.list_sentences if len(x)>=3]
-        self.list_sentences_trans = [x for x in self.list_sentences_trans if len(x)>=3]
+
+
+        self.list_sentences = [x for x in self.list_sentences if x not in self.combinations]
+        self.list_sentences_trans = [x for x in self.list_sentences_trans if x not in self.combinations]
     def formint_output_text(self, out=True):
         print(inspect.currentframe().f_code.co_name + ": ")
 
@@ -1395,26 +1412,26 @@ class MyWindow(QWidget):
         print(1, end="")
 
         lang_orig = self.language_combo_original.currentData()
-        lang_orig = langcodes.Language(lang_orig).language_name()
-        self.list_sentences = nltk.sent_tokenize(self.currentParagraph, language=lang_orig)
+        lang_orig = langcodes.Language(lang_orig).language_name().islower()
+        self.list_sentences = self.nltk_decorator.sent_tokenize(self.currentParagraph, language=lang_orig)
 
         text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph)
 
         lang_trans = self.language_combo_translate.currentData()
         lang_trans = langcodes.Language(lang_trans).language_name()
-        self.list_sentences_trans = nltk.sent_tokenize(text_trans, language=lang_trans)
+        self.list_sentences_trans = self.nltk_decorator.sent_tokenize(text_trans, language=lang_trans)
 
         self.filt_orig_and_trans_sentence()
         if len(self.list_sentences) != len(self.list_sentences_trans):
             print(2, end="")
             text = "".join([i if i.isalpha() else unidecode(i) for i in self.currentParagraph])
-            self.list_sentences = nltk.sent_tokenize(text, language=lang_orig)
+            self.list_sentences = self.nltk_decorator.sent_tokenize(text, language=lang_orig)
 
             self.filt_orig_and_trans_sentence()
             if len(self.list_sentences) != len(self.list_sentences_trans):
                 print(3, end="")
                 text_translate = self.google_Translate_to_trans_with_random_lang(text)
-                self.list_sentences_trans = nltk.sent_tokenize(text_translate, language=lang_trans)
+                self.list_sentences_trans = self.nltk_decorator.sent_tokenize(text_translate, language=lang_trans)
 
                 self.filt_orig_and_trans_sentence()
                 if len(self.list_sentences) != len(self.list_sentences_trans):
