@@ -1,4 +1,6 @@
 import nltk
+if not nltk.data.find('tokenizers/punkt'):
+    nltk.download('punkt')
 class Nltk_decorator:
     def sent_tokenize(self, currentParagraph, language):
         try:

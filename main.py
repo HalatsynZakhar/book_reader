@@ -9,9 +9,7 @@ from itertools import product
 import chardet
 import requests
 from bs4 import BeautifulSoup
-import nltk
-if not nltk.data.find('tokenizers/punkt'):
-    nltk.download('punkt')
+
 import langcodes
 from unidecode import unidecode
 
