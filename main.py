@@ -528,18 +528,19 @@ class MyWindow(QWidget):
                 self.color_buttons[i].setStyleSheet("background-color: {}".format(self.day_mode_colors[i].name()))
 
     def show_color_dialog(self, index):
-        print(inspect.currentframe().f_code.co_name)
-
-        # Создаем диалог выбора цвета
-        color = QColorDialog.getColor()
         if self.switch_night_mode.isChecked():
-            self.night_mod_colors[index] = color
+            current_color = self.night_mod_colors[index]
         else:
-            self.day_mode_colors[index] = color
-        self.color_buttons[index].setStyleSheet("background-color: {}".format(color.name()))
+            current_color = self.day_mode_colors[index]
 
-        self.toggle_theme()
-        # Если цвет был выбран, то устанавливаем его для кнопки
+        color = QColorDialog.getColor(current_color)
+        if color.isValid():
+            if self.switch_night_mode.isChecked():
+                self.night_mod_colors[index] = color
+            else:
+                self.day_mode_colors[index] = color
+            self.color_buttons[index].setStyleSheet("background-color: {}".format(color.name()))
+            self.toggle_theme()
 
     def language_changed_original(self, index):
         print(inspect.currentframe().f_code.co_name)
@@ -852,16 +853,13 @@ class MyWindow(QWidget):
         # Преобразование типов данных
         self.visible_trans = True if self.visible_trans.lower() == "true" else False
         self.use_cursor = True if self.use_cursor.lower() == "true" else False
+
         self.auto_play = True if self.auto_play.lower() == "true" else False
         self.night_mode = True if self.night_mode.lower() == "true" else False
         self.center_setting = True if self.center_setting.lower() == "true" else False
         self.audio_enabled = True if self.audio_enabled.lower() == "true" else False
         self.view_current_page = True if self.view_current_page.lower() == "true" else False
         self.view_all_pages = True if self.view_all_pages.lower() == "true" else False
-
-
-
-
 
         self.playback_speed = float(self.playback_speed)
         self.fontSize = int(self.fontSize)
