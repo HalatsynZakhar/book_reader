@@ -1382,13 +1382,17 @@ class MyWindow(QWidget):
             else:
                 self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
 
-
+    def filt_orig_and_trans_sentence(self):
+        self.list_sentences = [x for x in self.list_sentences if len(x)>=3]
+        self.list_sentences_trans = [x for x in self.list_sentences_trans if len(x)>=3]
     def formint_output_text(self, out=True):
-        print(inspect.currentframe().f_code.co_name + ": ", end="")
+        print(inspect.currentframe().f_code.co_name + ": ")
 
         self.hide_curren_and_all_page()
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
+
+        print(1, end="")
 
         lang_orig = self.language_combo_original.currentData()
         lang_orig = langcodes.Language(lang_orig).language_name()
@@ -1400,31 +1404,25 @@ class MyWindow(QWidget):
         lang_trans = langcodes.Language(lang_trans).language_name()
         self.list_sentences_trans = nltk.sent_tokenize(text_trans, language=lang_trans)
 
-        print(1, end="")
+        self.filt_orig_and_trans_sentence()
         if len(self.list_sentences) != len(self.list_sentences_trans):
             print(2, end="")
             text = "".join([i if i.isalpha() else unidecode(i) for i in self.currentParagraph])
             self.list_sentences = nltk.sent_tokenize(text, language=lang_orig)
 
-            self.list_sentences = [x for x in self.list_sentences if x]
-            self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
-
+            self.filt_orig_and_trans_sentence()
             if len(self.list_sentences) != len(self.list_sentences_trans):
                 print(3, end="")
                 text_translate = self.google_Translate_to_trans_with_random_lang(text)
                 self.list_sentences_trans = nltk.sent_tokenize(text_translate, language=lang_trans)
 
-                self.list_sentences = [x for x in self.list_sentences if x]
-                self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
-
+                self.filt_orig_and_trans_sentence()
                 if len(self.list_sentences) != len(self.list_sentences_trans):
                     print(4, end="")
                     self.list_sentences = re.findall(r'(?s)(.*?(?:[.?!]|$))', text)
                     self.list_sentences_trans = re.findall(r'(?s)(.*?(?:[.?!]|$))', text_translate)
 
-                    self.list_sentences = [x for x in self.list_sentences if x]
-                    self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
-
+                    self.filt_orig_and_trans_sentence()
                     if len(self.list_sentences) != len(self.list_sentences_trans):
                         print(5, end="")
 
@@ -1445,9 +1443,7 @@ class MyWindow(QWidget):
                                 count += 1
                             self.list_sentences_trans[count] += i
 
-                        self.list_sentences = [x for x in self.list_sentences if x]
-                        self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
-
+                        self.filt_orig_and_trans_sentence()
                         if len(self.list_sentences) != len(self.list_sentences_trans):
                             print(6, end="")
 
@@ -1468,14 +1464,15 @@ class MyWindow(QWidget):
                                     count += 1
                                 self.list_sentences_trans[count] += i
 
-                            self.list_sentences = [x for x in self.list_sentences if x]
-                            self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
+                            self.filt_orig_and_trans_sentence()
 
                             count = 10
                             while len(self.list_sentences) != len(self.list_sentences_trans):
                                 print(7, end="")
                                 self.parsing_paragraph(text, text_translate, count)
                                 count += 10
+
+                                self.filt_orig_and_trans_sentence()
 
                             """
                             if len(self.list_sentences) != len(self.list_sentences_trans):
