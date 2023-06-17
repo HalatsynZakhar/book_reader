@@ -1394,10 +1394,8 @@ class MyWindow(QWidget):
                 self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
 
     def filt_orig_and_trans_sentence(self):
-
-
-        self.list_sentences = [x for x in self.list_sentences if x not in self.combinations]
-        self.list_sentences_trans = [x for x in self.list_sentences_trans if x not in self.combinations]
+        self.list_sentences = [x.strip() for x in self.list_sentences if x not in self.combinations]
+        self.list_sentences_trans = [x.strip() for x in self.list_sentences_trans if x not in self.combinations]
     def formint_output_text(self, out=True):
         print(inspect.currentframe().f_code.co_name + ": ")
 
@@ -1408,7 +1406,7 @@ class MyWindow(QWidget):
         print(1, end="")
 
         lang_orig = self.language_combo_original.currentData()
-        lang_orig = langcodes.Language(lang_orig).language_name().islower()
+        lang_orig = langcodes.Language(lang_orig).language_name().lower()
         self.list_sentences = self.nltk_decorator.sent_tokenize(self.currentParagraph, language=lang_orig)
 
         text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph)
@@ -1444,17 +1442,20 @@ class MyWindow(QWidget):
                         for i in text:
                             if i == ".":
                                 self.list_sentences.append("")
+                                self.list_sentences[count] += i
                                 count += 1
-
-                            self.list_sentences[count] += i
+                            else:
+                                self.list_sentences[count] += i
 
                         self.list_sentences_trans = [""]
                         count = 0
                         for i in text_translate:
                             if i == ".":
                                 self.list_sentences_trans.append("")
+                                self.list_sentences_trans[count] += i
                                 count += 1
-                            self.list_sentences_trans[count] += i
+                            else:
+                                self.list_sentences_trans[count] += i
 
                         self.filt_orig_and_trans_sentence()
                         if len(self.list_sentences) != len(self.list_sentences_trans):
