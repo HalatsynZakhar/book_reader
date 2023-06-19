@@ -18,11 +18,13 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QSettings, QEvent
 from PyQt5.QtGui import QPalette, QColor, QIntValidator, QFontDatabase, QFont
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, \
-    QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog, QDoubleSpinBox, QFontComboBox
+    QSpinBox, QLineEdit, QCheckBox, QFileDialog, QComboBox, QDialog, QColorDialog, QDoubleSpinBox, QFontComboBox, \
+    QTableWidget, QTableWidgetItem
 from lxml import etree
 import pygame
 
 from AudioThread import AudioThread
+from BookmarkDialog import BookmarkDialog
 from Cached import Cached
 from CachedTranslator import CachedTranslator
 from MyTextBrowser import MyTextBrowser
@@ -314,6 +316,9 @@ class MyWindow(QWidget):
         self.select_bookmark_button = QPushButton(self.google_Translate_init("Search history"), self)
         path_to_file_layout.addWidget(self.select_bookmark_button)
 
+        self.edit_bookmark_books_button = QPushButton(self.google_Translate_init("Edit history"), self)
+        path_to_file_layout.addWidget(self.edit_bookmark_books_button)
+
         # создаем маленький горизонтальный лейаут
         find_song_layout = QHBoxLayout()
         main_layout.addLayout(find_song_layout)
@@ -331,6 +336,9 @@ class MyWindow(QWidget):
         self.select_bookmark_song_button = QPushButton(self.google_Translate_init("Search history"), self)
         find_song_layout.addWidget(self.select_bookmark_song_button)
 
+        self.edit_bookmark_songs_button = QPushButton(self.google_Translate_init("Edit history"), self)
+        find_song_layout.addWidget(self.edit_bookmark_songs_button)
+
         # устанавливаем вертикальный лейаут в качестве главного лейаута окна
         self.setLayout(main_layout)
 
@@ -340,6 +348,8 @@ class MyWindow(QWidget):
         self.language_combo_original.currentIndexChanged.connect(self.language_changed_original)
         self.language_combo_translate.currentIndexChanged.connect(self.language_changed_translate)
 
+        self.edit_bookmark_books_button.clicked.connect(self.edit_bookmarks_books)
+        self.edit_bookmark_songs_button.clicked.connect(self.edit_bookmarks_songs)
         self.select_bookmark_song_button.clicked.connect(self.select_bookmark_song)
         self.select_bookmark_button.clicked.connect(self.select_bookmark)
         self.next_button.clicked.connect(self.next_button_clicked)
@@ -456,6 +466,15 @@ class MyWindow(QWidget):
 
         bookmarks_list.currentIndexChanged.connect(lambda: self.handle_bookmark_selection(bookmarks_list))
         bookmarks_list.showPopup()
+
+    def edit_bookmarks_books(self):
+        dialog = BookmarkDialog(self, "book")
+        dialog.exec_()
+        self.settings.setValue("bookmarks_book", self.bookmarks_book)
+    def edit_bookmarks_songs(self):
+        dialog = BookmarkDialog(self, "song")
+        dialog.exec_()
+        self.settings.setValue("bookmarks_song", self.bookmarks_song)
 
     def handle_bookmark_selection(self, bookmark_list):
         print(inspect.currentframe().f_code.co_name)
@@ -581,6 +600,7 @@ class MyWindow(QWidget):
         playback_speed = self.google_Translate_to_trans_with_eng("Playback speed")
         left_click_nav = self.google_Translate_to_trans_with_eng("Left click navigation")
         visib_trans = self.google_Translate_to_trans_with_eng("Translation display") + " (T)"
+        edit_history = self.google_Translate_to_trans_with_eng("Edit history")
 
         self.switch_visible_trans.setText(visib_trans)
         self.switch_use_cursor.setText(left_click_nav)
@@ -606,10 +626,14 @@ class MyWindow(QWidget):
         self.button_navigator.setText(button_navigator_text)
         self.select_bookmark_button.setText(select_bookmark)
         self.select_bookmark_song_button.setText(select_bookmark_song)
+        self.edit_bookmark_books_button.setText(edit_history)
+        self.edit_bookmark_songs_button.setText(edit_history)
 
         self.translate_dialog_windows = [self.google_Translate_to_trans_with_eng(i) for i in
                                          self.orgignal_dialog_window]
 
+        self.translate_history_dialog = [self.google_Translate_to_trans_with_eng(i) for i in
+                                         self.original_history_dialog]
     def language_changed_translate(self, index):
         print(inspect.currentframe().f_code.co_name)
 
@@ -876,8 +900,10 @@ class MyWindow(QWidget):
                                        "Alternate base color", "Tooltip base color",
                                        "Tooltip text color", "Text color", "Button color", "Button text color",
                                        "Bright text color", "Link color", "Highlight color", "Highlighted text color","Header highlighting",  "Sentence highlighting (original text)", "Unselected text (original text)", "Sentence highlighting (translated text)", "Unselected text (translated text)", "default settings"]
-        self.translate_dialog_windows = [self.google_Translate_init(i) for i in self.orgignal_dialog_window]
+        self.original_history_dialog = ["Bookmarks", "Delete", "Delete all", "Edit books history", "Edit songs history"]
 
+        self.translate_dialog_windows = [self.google_Translate_init(i) for i in self.orgignal_dialog_window]
+        self.translate_history_dialog = [self.google_Translate_init(i) for i in self.original_history_dialog]
     def read_txt(self):
         print(inspect.currentframe().f_code.co_name)
 
