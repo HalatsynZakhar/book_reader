@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 import langcodes
 from unidecode import unidecode
 
-
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt, QSettings, QEvent
 from PyQt5.QtGui import QPalette, QColor, QIntValidator, QFontDatabase, QFont
@@ -45,7 +44,6 @@ class MyWindow(QWidget):
         self.lock = threading.Lock()
         self.stop_flag = threading.Event()
 
-
         # Создание экземпляра CachedTranslator
         self.translator = CachedTranslator("cached_translate.xml")
         self.cached_Music = Cached("cached_music.xml")
@@ -70,6 +68,7 @@ class MyWindow(QWidget):
             for combo_tuple in product(combo, repeat=i):
                 combination = "".join(combo_tuple)
                 self.combinations.append(combination)
+
     def create_GUI(self):
         print(inspect.currentframe().f_code.co_name)
         # создаем главный вертикальный лейаут
@@ -128,7 +127,6 @@ class MyWindow(QWidget):
         self.choice_trans_lang_label = QLabel(self.google_Translate_init("Native language: "))
         translate_lang_layout.addWidget(self.choice_trans_lang_label)
 
-
         self.language_combo_translate = QComboBox()
         for language, code in self.languages.items():
             self.language_combo_translate.addItem(language, code)
@@ -143,7 +141,6 @@ class MyWindow(QWidget):
         # создаем label "Font size" и добавляем его в горизонтальный лейаут
         self.font_size_label = QLabel(self.google_Translate_init("Font:"))
         font_layout.addWidget(self.font_size_label)
-
 
         # Создаем поле выбора шрифтов
         self.font_combobox = QFontComboBox()
@@ -182,7 +179,6 @@ class MyWindow(QWidget):
         self.playback_speed_label = QLabel(self.google_Translate_init("Playback speed"))
         playback_speed_layout.addWidget(self.playback_speed_label)
 
-
         self.spin_box_playback_speed = QDoubleSpinBox()
         playback_speed_layout.addWidget(self.spin_box_playback_speed)
         self.spin_box_playback_speed.setMinimum(0.25)
@@ -216,7 +212,6 @@ class MyWindow(QWidget):
         pages_layout.addWidget(self.switch_use_cursor)
         if self.use_cursor:
             self.switch_use_cursor.toggle()
-
 
         # создаем маленький гор лейаут
         curr_page = QHBoxLayout()
@@ -253,7 +248,6 @@ class MyWindow(QWidget):
         # создаем маленький вертикальный лейаут
         toggle_and_aljust_layout = QVBoxLayout()
         horizontal_layout.addLayout(toggle_and_aljust_layout)
-
 
         self.switch_visible_trans = QCheckBox(self.google_Translate_init("Translation display") + " (T)", self)
         toggle_and_aljust_layout.addWidget(self.switch_visible_trans)
@@ -381,7 +375,6 @@ class MyWindow(QWidget):
         self.input_path_to_file.installEventFilter(self)
         self.input_find_songs.installEventFilter(self)
 
-
         self.input_field.editingFinished.connect(self.handle_editing_finished)
         self.input_path_to_file.editingFinished.connect(self.handle_editing_path)
         self.input_find_songs.editingFinished.connect(self.handle_editing_song)
@@ -395,7 +388,6 @@ class MyWindow(QWidget):
             self.setWindowTitle("{}".format(self.last_book))
         if self.active_mode == "song":
             self.setWindowTitle(" ".join(self.last_song))
-
 
     def eventFilter(self, obj, event):
         if obj is self.input_path_to_file and event.type() == QtCore.QEvent.FocusIn:
@@ -415,19 +407,21 @@ class MyWindow(QWidget):
             self.font_combobox.setCurrentFont(QFont(self.current_font))
             return
 
-
         self.current_font = font
         self.font_combobox.clearFocus()
         self.settings.setValue("current_font", self.current_font)
         self.output_paragraph()
+
     def spin_box_playback_speed_func(self):
         print(inspect.currentframe().f_code.co_name)
 
         self.settings.setValue("playback_speed", self.spin_box_playback_speed.value())
+
     def auto_go_next(self):
         print(inspect.currentframe().f_code.co_name)
 
         self.next_button_clicked()
+
     def select_bookmark_song(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -441,7 +435,8 @@ class MyWindow(QWidget):
         else:
             bookmarks_list_song.setCurrentIndex(-1)
 
-        bookmarks_list_song.currentIndexChanged.connect(lambda: self.handle_bookmark_selection_song(bookmarks_list_song))
+        bookmarks_list_song.currentIndexChanged.connect(
+            lambda: self.handle_bookmark_selection_song(bookmarks_list_song))
         bookmarks_list_song.showPopup()
 
     def handle_bookmark_selection_song(self, bookmark_list_song):
@@ -471,6 +466,7 @@ class MyWindow(QWidget):
         dialog = BookmarkDialog(self, "book")
         dialog.exec_()
         self.settings.setValue("bookmarks_book", self.bookmarks_book)
+
     def edit_bookmarks_songs(self):
         dialog = BookmarkDialog(self, "song")
         dialog.exec_()
@@ -499,8 +495,8 @@ class MyWindow(QWidget):
         choose_color_name = self.translate_dialog_windows[2]
 
         self.color_buttons = []
-        for i in range(len(self.translate_dialog_windows)-2):
-            if i>=len(self.translate_dialog_windows)-2-2:
+        for i in range(len(self.translate_dialog_windows) - 2):
+            if i >= len(self.translate_dialog_windows) - 2 - 2:
                 break
             hor_layout = QHBoxLayout()
             color_label = QLabel(self.translate_dialog_windows[3 + i])
@@ -634,6 +630,7 @@ class MyWindow(QWidget):
 
         self.translate_history_dialog = [self.google_Translate_to_trans_with_eng(i) for i in
                                          self.original_history_dialog]
+
     def language_changed_translate(self, index):
         print(inspect.currentframe().f_code.co_name)
 
@@ -646,7 +643,6 @@ class MyWindow(QWidget):
 
         self.settings.setValue("default_language_trans", self.language_combo_translate.currentData())
 
-
     def select_file(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -658,15 +654,13 @@ class MyWindow(QWidget):
             self.input_path_to_file.setText(fileName)
             self.handle_editing_path()
 
-
-
     def get_musinfo(self, lyrict_title_list):
         print(inspect.currentframe().f_code.co_name + ": ", end=" ")
 
         try:
             index_of_dash = lyrict_title_list.index("-")
             group_and_music = ("-".join(lyrict_title_list[:index_of_dash]), "-".join(
-            lyrict_title_list[index_of_dash + 1:]))
+                lyrict_title_list[index_of_dash + 1:]))
 
             # URL страницы с текстом песни
             url = 'https://ru.musinfo.net/lyrics/{}'.format("/".join(group_and_music))
@@ -693,7 +687,6 @@ class MyWindow(QWidget):
             return ""
         print("https://ru.musinfo.net/lyrics/")
         return text_result
-
 
     def get_muztext(self, lyrict_title_list):
         print(inspect.currentframe().f_code.co_name + ": ", end=" ")
@@ -743,7 +736,6 @@ class MyWindow(QWidget):
                 """за данным запросом книги не существует"""
                 self.bookmark = 0
                 self.count = 0
-
 
         if self.text == "":
             self.text += self.google_Translate_to_orig_with_Eng(
@@ -895,15 +887,20 @@ class MyWindow(QWidget):
         self.setGeometry(self.window_geometry_x, self.window_geometry_y, self.window_geometry_width,
                          self.window_geometry_height)
 
-        self.orgignal_dialog_window = ["Settings for the current theme: night", "Settings for the current theme: day", "Choose color",
+        self.orgignal_dialog_window = ["Settings for the current theme: night", "Settings for the current theme: day",
+                                       "Choose color",
                                        "Window background color", "Window text color", "Base color",
                                        "Alternate base color", "Tooltip base color",
                                        "Tooltip text color", "Text color", "Button color", "Button text color",
-                                       "Bright text color", "Link color", "Highlight color", "Highlighted text color","Header highlighting",  "Sentence highlighting (original text)", "Unselected text (original text)", "Sentence highlighting (translated text)", "Unselected text (translated text)", "default settings"]
+                                       "Bright text color", "Link color", "Highlight color", "Highlighted text color",
+                                       "Header highlighting", "Sentence highlighting (original text)",
+                                       "Unselected text (original text)", "Sentence highlighting (translated text)",
+                                       "Unselected text (translated text)", "default settings"]
         self.original_history_dialog = ["Bookmarks", "Delete", "Delete all", "Edit books history", "Edit songs history"]
 
         self.translate_dialog_windows = [self.google_Translate_init(i) for i in self.orgignal_dialog_window]
         self.translate_history_dialog = [self.google_Translate_init(i) for i in self.original_history_dialog]
+
     def read_txt(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -958,7 +955,6 @@ class MyWindow(QWidget):
                 self.bookmark = 0
                 self.count = 0
 
-
         if self.text == "":
             self.text += self.google_Translate_to_orig_with_Eng(
                 r"The path to the file is missing, or the file is invalid. Please enter a valid relative or " \
@@ -977,6 +973,7 @@ class MyWindow(QWidget):
         self.input_field.setValidator(validator)
 
         self.formint_output_text()
+
     def handle_editing_song(self):
         print(inspect.currentframe().f_code.co_name + ": ", end="")
 
@@ -1033,7 +1030,6 @@ class MyWindow(QWidget):
         self.input_find_songs.clear()
         self.input_find_songs.clearFocus()
 
-
     def handle_editing_path(self):
         print(inspect.currentframe().f_code.co_name + ": ", end="")
 
@@ -1041,7 +1037,6 @@ class MyWindow(QWidget):
             print("cond1")
 
             self.input_path_to_file.clearFocus()
-
 
             return
         if self.input_path_to_file.text() == "" and self.active_mode == "song":
@@ -1073,8 +1068,6 @@ class MyWindow(QWidget):
             self.active_mode = "book"
             self.setWindowTitle("{}".format(self.last_book))
 
-
-
             self.read_txt()
             self.settings.setValue("active_mode", self.active_mode)
 
@@ -1093,7 +1086,6 @@ class MyWindow(QWidget):
         self.setWindowTitle("{}".format(self.last_book))
 
         self.read_txt()
-
 
         self.input_path_to_file.clear()
         self.input_path_to_file.clearFocus()
@@ -1147,6 +1139,7 @@ class MyWindow(QWidget):
                 self.input_field.setPlaceholderText("? / ?")
 
         self.settings.setValue("view_current_page", self.switch_Hide_current_page.isChecked())
+
     def hide_all_pages(self, state):
         print(inspect.currentframe().f_code.co_name)
 
@@ -1164,6 +1157,7 @@ class MyWindow(QWidget):
                 self.input_field.setPlaceholderText("? / ?")
 
         self.settings.setValue("view_all_pages", self.switch_Hide_all_pages.isChecked())
+
     def event(self, event):
         # Проверяем, что произошло событие колеса мыши с зажатой клавишей Ctrl
         if event.type() == QEvent.Wheel and event.modifiers() == Qt.ControlModifier:
@@ -1176,13 +1170,13 @@ class MyWindow(QWidget):
     def play_audio(self):
         print(inspect.currentframe().f_code.co_name)
 
-
         # остановка генерации аудиофайла при переключении на следующее предложение
         self.stop_flag.set()
         self.stop_flag = threading.Event()
-        self.thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(), self.language_combo_original.currentData(), self.stop_flag,
-                             self.lock,
-                             self.switch_auto_play.isChecked())
+        self.thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(),
+                                  self.language_combo_original.currentData(), self.stop_flag,
+                                  self.lock,
+                                  self.switch_auto_play.isChecked())
         self.thread.finished.connect(self.auto_go_next)
         self.thread.start()
 
@@ -1198,7 +1192,6 @@ class MyWindow(QWidget):
             self.text_browser.setAlignment(QtCore.Qt.AlignCenter)
         else:
             self.text_browser.setAlignment(QtCore.Qt.AlignLeft)
-
 
         self.settings.setValue("center_setting", self.switch_center.isChecked())
         self.output_paragraph()
@@ -1218,6 +1211,7 @@ class MyWindow(QWidget):
             self.stop_flag.set()
 
         self.settings.setValue("auto_play", self.switch_auto_play.isChecked())
+
     def audio_switch(self, state):
         print(inspect.currentframe().f_code.co_name)
 
@@ -1235,21 +1229,21 @@ class MyWindow(QWidget):
         """
         if self.language_combo_translate.currentData() == self.language_combo_translate:
             return text
-        text_res = self.translator.translate(text, dest=self.language_combo_translate.currentData())
+        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData())
         return text_res
 
     def google_Translate_to_trans_with_eng(self, text):
         """функция используется для перевода с английского на родной"""
         if self.language_combo_translate.currentData() == "en":
             return text
-        text_res = self.translator.translate(text, dest=self.language_combo_translate.currentData())
+        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData())
         return text_res
 
     def google_Translate_to_orig_with_Eng(self, text):
         """для перевода с английского на язык изучения"""
         if self.language_combo_original == "en":
             return text
-        text_res = self.translator.translate(text, dest=self.language_combo_original.currentData())
+        text_res = self.translator.my_translate(text, dest=self.language_combo_original.currentData())
         return text_res
 
     def google_Translate_init(self, text):
@@ -1257,7 +1251,7 @@ class MyWindow(QWidget):
         if self.default_language_trans == "en":
             return text
         """Use default settings"""
-        text_res = self.translator.translate(text, dest=self.default_language_trans)
+        text_res = self.translator.my_translate(text, dest=self.default_language_trans)
         return text_res
 
     def next_button_clicked(self):
@@ -1273,7 +1267,6 @@ class MyWindow(QWidget):
             self.formint_output_text()
         else:
             self.output_paragraph()
-
 
     def next_next_button_clicked(self):
         print(inspect.currentframe().f_code.co_name)
@@ -1358,6 +1351,7 @@ class MyWindow(QWidget):
             self.output_paragraph()
 
         self.settings.setValue("night_mode", self.switch_night_mode.isChecked())
+
     def changeFont_update(self, event):
         print(inspect.currentframe().f_code.co_name)
 
@@ -1389,39 +1383,70 @@ class MyWindow(QWidget):
 
     def out(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[15].name(), self.current_font, self.filter_text(text + end_space)))
+            self.text_browser.insertHtml(
+                '<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[15].name(),
+                                                                             self.current_font,
+                                                                             self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[15].name(), self.current_font, self.filter_text(text + end_space)))
+            self.text_browser.insertHtml(
+                '<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[15].name(),
+                                                                             self.current_font,
+                                                                             self.filter_text(text + end_space)))
+
     def out_marker1(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[14].name(), self.current_font, self.filter_text(text + end_space)))
+            self.text_browser.insertHtml(
+                '<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[14].name(),
+                                                                             self.current_font,
+                                                                             self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[14].name(), self.current_font, self.filter_text(text + end_space)))
+            self.text_browser.insertHtml(
+                '<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[14].name(),
+                                                                             self.current_font,
+                                                                             self.filter_text(text + end_space)))
 
     def out_marker2(self, text, end_space="\n"):
         if self.switch_night_mode.isChecked():
-            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[13].name(), self.current_font, self.filter_text(text + end_space)))
+            self.text_browser.insertHtml(
+                '<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[13].name(),
+                                                                             self.current_font,
+                                                                             self.filter_text(text + end_space)))
         else:
-            self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[13].name(), self.current_font, self.filter_text(text + end_space)))
-
-
+            self.text_browser.insertHtml(
+                '<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[13].name(),
+                                                                             self.current_font,
+                                                                             self.filter_text(text + end_space)))
 
     def out_trans(self, text, end_space="\n"):
         if self.switch_visible_trans.isChecked():
             if self.switch_night_mode.isChecked():
-                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[17].name(), self.current_font, self.filter_text(text + end_space)))
+                self.text_browser.insertHtml(
+                    '<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[17].name(),
+                                                                                 self.current_font,
+                                                                                 self.filter_text(text + end_space)))
             else:
-                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[17].name(), self.current_font, self.filter_text(text + end_space)))
+                self.text_browser.insertHtml(
+                    '<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[17].name(),
+                                                                                 self.current_font,
+                                                                                 self.filter_text(text + end_space)))
+
     def out_marker1_trans(self, text, end_space="\n"):
         if self.switch_visible_trans.isChecked():
             if self.switch_night_mode.isChecked():
-                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
+                self.text_browser.insertHtml(
+                    '<span style="color: {}; font-family: {};">{}</span>'.format(self.night_mod_colors[16].name(),
+                                                                                 self.current_font,
+                                                                                 self.filter_text(text + end_space)))
             else:
-                self.text_browser.insertHtml('<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(), self.current_font, self.filter_text(text + end_space)))
+                self.text_browser.insertHtml(
+                    '<span style="color: {}; font-family: {};">{}</span>'.format(self.day_mode_colors[16].name(),
+                                                                                 self.current_font,
+                                                                                 self.filter_text(text + end_space)))
 
     def filt_orig_and_trans_sentence(self):
         self.list_sentences = [x.strip() for x in self.list_sentences if x not in self.combinations]
         self.list_sentences_trans = [x.strip() for x in self.list_sentences_trans if x not in self.combinations]
+
     def formint_output_text(self, out=True):
         print(inspect.currentframe().f_code.co_name + ": ")
 
@@ -1506,11 +1531,11 @@ class MyWindow(QWidget):
 
                             self.filt_orig_and_trans_sentence()
 
-                            count = 10
+                            count = 5
                             while len(self.list_sentences) != len(self.list_sentences_trans):
                                 print(7, end="")
                                 self.parsing_paragraph(text, text_translate, count)
-                                count += 10
+                                count += 5
 
                                 self.filt_orig_and_trans_sentence()
 
@@ -1524,7 +1549,6 @@ class MyWindow(QWidget):
 
         if out:
             self.output_paragraph()
-
 
     def parsing_paragraph(self, text, text_translate, max):
         self.list_sentences = [""]
@@ -1553,8 +1577,8 @@ class MyWindow(QWidget):
                 check += 1
             self.list_sentences_trans[count] += i
 
-        self.list_sentences = [x for x in self.list_sentences if x]
-        self.list_sentences_trans = [x for x in self.list_sentences_trans if x]
+        self.filt_orig_and_trans_sentence()
+
     def output_paragraph(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -1582,10 +1606,15 @@ class MyWindow(QWidget):
                 self.list_sentences[i] = self.list_sentences[i][1::]
 
             if self.count == i:
-                self.out_marker1(self.list_sentences[i], " ")
+                if i != len(self.list_sentences) - 1:
+                    self.out_marker1(self.list_sentences[i], " ")
+                else:
+                    self.out_marker1(self.list_sentences[i], "")
             else:
-                self.out(self.list_sentences[i], " ")
-
+                if i!=len(self.list_sentences)-1:
+                    self.out(self.list_sentences[i], " ")
+                else:
+                    self.out(self.list_sentences[i], "")
         self.out_trans("\n")
 
         if not self.switch_center.isChecked():
@@ -1593,11 +1622,15 @@ class MyWindow(QWidget):
 
         for i in range(len(self.list_sentences_trans)):
             if self.count == i:
-                self.out_marker1_trans(self.list_sentences_trans[i], " ")
+                if i != len(self.list_sentences_trans) - 1:
+                    self.out_marker1_trans(self.list_sentences_trans[i], " ")
+                else:
+                    self.out_marker1_trans(self.list_sentences_trans[i], "")
             else:
-                self.out_trans(self.list_sentences_trans[i], " ")
-
-
+                if i != len(self.list_sentences_trans) - 1:
+                    self.out_trans(self.list_sentences_trans[i], " ")
+                else:
+                    self.out_trans(self.list_sentences_trans[i], "")
 
         if self.bookmark == len(self.list_paragraph) - 1:
             self.out("\n")

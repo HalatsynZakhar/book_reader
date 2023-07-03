@@ -10,19 +10,19 @@ class CachedTranslator(Translator, Cached):
         super().__init__()
         Cached.__init__(self, file, cache_size=10000)
 
-    def translate(self, text, dest='en', src='auto'):
+    def my_translate(self, text, dest='en', src='auto'):
         try:
             print("translate:", end=" ")
-
             key = str((text, dest, src))
-
             res = self.get(key)
             if res != "":
                 return res
-            result = super().translate(text, dest=dest, src=src)
-            self.set(key, result.text)
+            escaped_text = text.replace("\"", "\\\"")
+            result = super().translate(escaped_text, dest=dest, src=src)
+            unescaped_text = result.text.replace("\\\"", "\"")
+            self.set(key, unescaped_text)
             print("google")
-            return result.text
+            return unescaped_text
         except:
             return text
 
