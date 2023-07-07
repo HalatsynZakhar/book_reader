@@ -17,34 +17,31 @@ class CachedTranslator(Cached):
             if res != "":
                 return res
 
-
-            if alternative_translate==0:
-                translator = Translator()
-                translation = translator.translate(text, dest)
-                print("googletrans==4.0.0-rc1")
-                res = translation.text
-            if alternative_translate==1:
-                res = translate(text, dest)
-                print("mtranslate (google)")
-            if alternative_translate==2:
-                # service_trans = ["Google", "Iciba", "Baidu", "Bing", "Itranslate", "Sogou"]
-                print("translators: Google")
-                res = ts.translate_text(text, translator="Google".lower(), to_language=dest)
-            if alternative_translate==3:
-                print("translators: Iciba")
-                res = ts.translate_text(text, translator="Iciba".lower(), to_language=dest)
-            if alternative_translate == 4:
-                print("translators: Baidu")
-                res = ts.translate_text(text, translator="Baidu".lower(), to_language=dest)
-            if alternative_translate == 5:
+            if alternative_translate == 0:
                 print("translators: Bing")
                 res = ts.translate_text(text, translator="Bing".lower(), to_language=dest)
-            if alternative_translate == 6:
-                print("translators: Itranslate")
-                res = ts.translate_text(text, translator="Itranslate".lower(), to_language=dest)
-            if alternative_translate == 7:
+            if alternative_translate == 1:
+                translator = Translator()
+                translation = translator.translate(text, dest)
+                print("googletrans==3.1.0a0")
+            if alternative_translate == 2:
+                res = translate(text, dest)
+                print("mtranslate (google)")
+            if alternative_translate == 3:
+                print("translators: Google")
+                res = ts.translate_text(text, translator="Google".lower(), to_language=dest)
+            if alternative_translate == 4:
                 print("translators: Sogou")
                 res = ts.translate_text(text, translator="Sogou".lower(), to_language=dest)
+            if alternative_translate == 5:
+                print("translators: Iciba")
+                res = ts.translate_text(text, translator="Iciba".lower(), to_language=dest)
+            if alternative_translate == 6:
+                print("translators: Baidu")
+                res = ts.translate_text(text, translator="Baidu".lower(), to_language=dest)
+            if alternative_translate == 7:
+                print("translators: Itranslate")
+                res = ts.translate_text(text, translator="Itranslate".lower(), to_language=dest)
 
             self.set(key, res)
 
