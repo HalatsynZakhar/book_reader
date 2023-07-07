@@ -1,20 +1,15 @@
-import re
-
-from PyQt5.QtCore import QXmlStreamReader, QXmlStreamWriter, QFile, QIODevice
+import importlib
+from googletrans import Translator
 from mtranslate import translate
-from translate import Translator
-import xml.etree.ElementTree as ET
-
-from unidecode import unidecode
-
 from Cached import Cached
+import translators as ts
+import sys
 
 
 class CachedTranslator(Cached):
     def __init__(self, file):
         Cached.__init__(self, file, cache_size=10000)
-
-    def my_translate(self, text, dest='en', src='auto', alternative_translate=False):
+    def my_translate(self, text, dest='en', src='auto', alternative_translate=0):
         try:
             print("translate:", end=" ")
             key = str((text, dest, src, alternative_translate))
@@ -22,13 +17,34 @@ class CachedTranslator(Cached):
             if res != "":
                 return res
 
-            if alternative_translate:
-                translator = Translator(to_lang=dest)
-                res = translator.translate(text)
-                print("microsoft")
-            else:
+
+            if alternative_translate==0:
+                translator = Translator()
+                translation = translator.translate(text, dest)
+                print("googletrans==4.0.0-rc1")
+                res = translation.text
+            if alternative_translate==1:
                 res = translate(text, dest)
-                print("google")
+                print("mtranslate (google)")
+            if alternative_translate==2:
+                # service_trans = ["Google", "Iciba", "Baidu", "Bing", "Itranslate", "Sogou"]
+                print("translators: Google")
+                res = ts.translate_text(text, translator="Google".lower(), to_language=dest)
+            if alternative_translate==3:
+                print("translators: Iciba")
+                res = ts.translate_text(text, translator="Iciba".lower(), to_language=dest)
+            if alternative_translate == 4:
+                print("translators: Baidu")
+                res = ts.translate_text(text, translator="Baidu".lower(), to_language=dest)
+            if alternative_translate == 5:
+                print("translators: Bing")
+                res = ts.translate_text(text, translator="Bing".lower(), to_language=dest)
+            if alternative_translate == 6:
+                print("translators: Itranslate")
+                res = ts.translate_text(text, translator="Itranslate".lower(), to_language=dest)
+            if alternative_translate == 7:
+                print("translators: Sogou")
+                res = ts.translate_text(text, translator="Sogou".lower(), to_language=dest)
 
             self.set(key, res)
 

@@ -1223,13 +1223,14 @@ class MyWindow(QWidget):
 
         self.settings.setValue("audio_enabled", self.switch_audio.isChecked())
 
-    def google_Translate_to_trans_with_random_lang(self, text, alternative_translate=False):
+    def google_Translate_to_trans_with_random_lang(self, text, alternative_translate=0):
         """Переводит реальные абзацы, исходный язык неизвестен, реузльтат тоже
         Исходный - неизвестно, выход - родной
         """
         if self.language_combo_translate.currentData() == self.language_combo_translate:
             return text
-        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData(), alternative_translate=alternative_translate)
+        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData(),
+                                                alternative_translate=alternative_translate)
         return text_res
 
     def google_Translate_to_trans_with_eng(self, text):
@@ -1447,6 +1448,7 @@ class MyWindow(QWidget):
         list_sentences = [x.strip() for x in list_sentences if unidecode(x) not in self.combinations]
         list_sentences_trans = [x.strip() for x in list_sentences_trans if unidecode(x) not in self.combinations]
         return list_sentences, list_sentences_trans
+
     def formint_output_text(self, out=True):
         print(inspect.currentframe().f_code.co_name + ": ")
 
@@ -1454,31 +1456,32 @@ class MyWindow(QWidget):
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
 
-        prior1, list_sentence1, list_sentence_trans1 = self.filter_sentence()
-        prior2, list_sentence2, list_sentence_trans2 = self.filter_sentence(alternative_translate=True)
+        list_res = []
 
-        if prior1<=prior2:
-            self.list_sentences = list_sentence1
-            self.list_sentences_trans = list_sentence_trans1
-            print("Use translate: google, prior: {}".format(prior1))
-        else:
-            self.list_sentences = list_sentence2
-            self.list_sentences_trans = list_sentence_trans2
-            print("Use translate: microsoft, prior: {}".format(prior2))
+        n = 8
+        for i in range(n):
+            list_res.append(self.filter_sentence(alternative_translate=i))
+            if list_res[i][0] == 0:
+                break
+        min_index = min(range(len(list_res)), key=lambda i: list_res[i][0])
+        self.list_sentences = list_res[min_index][1]
+        self.list_sentences_trans = list_res[min_index][2]
 
+        for i in list_res:
+            print(i)
 
         if out:
             self.output_paragraph()
 
-
-    def filter_sentence(self, alternative_translate=False):
+    def filter_sentence(self, alternative_translate=0):
         lang_orig = self.language_combo_original.currentData()
         lang_orig = langcodes.Language(lang_orig).language_name().lower()
 
         lang_trans = self.language_combo_translate.currentData()
         lang_trans = langcodes.Language(lang_trans).language_name().lower()
 
-        text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph, alternative_translate=alternative_translate)
+        text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph,
+                                                                     alternative_translate=alternative_translate)
 
         prior = 0
 
@@ -1490,19 +1493,23 @@ class MyWindow(QWidget):
             text = "".join([i if i.isalpha() else unidecode(i) for i in self.currentParagraph])
             list_sentences = self.nltk_decorator.sent_tokenize(text, language=lang_orig)
 
-            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
+                                                                                     list_sentences_trans)
             if len(list_sentences) != len(list_sentences_trans):
                 prior += 1
-                text_translate = self.google_Translate_to_trans_with_random_lang(text, alternative_translate=alternative_translate)
+                text_translate = self.google_Translate_to_trans_with_random_lang(text,
+                                                                                 alternative_translate=alternative_translate)
                 self.list_sentences_trans = self.nltk_decorator.sent_tokenize(text_translate, language=lang_trans)
 
-                list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+                list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
+                                                                                         list_sentences_trans)
                 if len(list_sentences) != len(list_sentences_trans):
                     prior += 1
                     list_sentences = re.findall(r'(?s)(.*?(?:[.?!]|$))', text)
                     list_sentences_trans = re.findall(r'(?s)(.*?(?:[.?!]|$))', text_translate)
 
-                    list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+                    list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
+                                                                                             list_sentences_trans)
                     if len(list_sentences) != len(list_sentences_trans):
                         prior += 1
 
@@ -1526,7 +1533,8 @@ class MyWindow(QWidget):
                             else:
                                 list_sentences_trans[count] += i
 
-                        list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+                        list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
+                                                                                                 list_sentences_trans)
                         if len(list_sentences) != len(list_sentences_trans):
                             prior += 1
 
@@ -1547,15 +1555,20 @@ class MyWindow(QWidget):
                                     count += 1
                                 list_sentences_trans[count] += i
 
-                            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+                            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
+                                                                                                     list_sentences_trans)
 
                             count = 5
                             while len(list_sentences) != len(list_sentences_trans):
                                 prior += 1
-                                list_sentences, list_sentences_trans = self.parsing_paragraph(list_sentences, list_sentences_trans, text, text_translate, count)
+                                list_sentences, list_sentences_trans = self.parsing_paragraph(list_sentences,
+                                                                                              list_sentences_trans,
+                                                                                              text, text_translate,
+                                                                                              count)
                                 count += 5
 
-                                list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+                                list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
+                                                                                                         list_sentences_trans)
 
                             """
                             if len(self.list_sentences) != len(self.list_sentences_trans):
@@ -1594,6 +1607,7 @@ class MyWindow(QWidget):
 
         list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
         return list_sentences, list_sentences_trans
+
     def output_paragraph(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -1626,7 +1640,7 @@ class MyWindow(QWidget):
                 else:
                     self.out_marker1(self.list_sentences[i], "")
             else:
-                if i!=len(self.list_sentences)-1:
+                if i != len(self.list_sentences) - 1:
                     self.out(self.list_sentences[i], " ")
                 else:
                     self.out(self.list_sentences[i], "")
