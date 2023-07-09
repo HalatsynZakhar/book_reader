@@ -6,6 +6,10 @@ class Nltk_decorator:
         try:
             list_sentences = nltk.sent_tokenize(currentParagraph, language=language)
         except:
-            print('Language not supported')
-            list_sentences = nltk.sent_tokenize(currentParagraph)
+            try:
+                print('Language not supported')
+                list_sentences = nltk.sent_tokenize(currentParagraph)
+            except:
+                print("Вовзрат оригинального текста, не удалось разбить на предложения")
+                return currentParagraph
         return list_sentences

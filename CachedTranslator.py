@@ -2,9 +2,11 @@ import importlib
 from googletrans import Translator
 from mtranslate import translate
 from Cached import Cached
-import translators as ts
 import sys
-
+try:
+    import translators as ts
+except:
+    print("Unable to connect the Internet")
 
 class CachedTranslator(Cached):
     def __init__(self, file):
@@ -15,14 +17,15 @@ class CachedTranslator(Cached):
             key = str((text, dest, src, alternative_translate))
             res = self.get(key)
             if res != "":
-                return res
+                return res, True
 
             if alternative_translate == 0:
                 print("translators: Bing")
                 res = ts.translate_text(text, translator="Bing".lower(), to_language=dest)
             if alternative_translate == 1:
                 translator = Translator()
-                translation = translator.translate(text, dest)
+                res = translator.translate(text, dest)
+                res = res.text
                 print("googletrans==3.1.0a0")
             if alternative_translate == 2:
                 res = translate(text, dest)
@@ -45,10 +48,10 @@ class CachedTranslator(Cached):
 
             self.set(key, res)
 
-            return res
+            return res, True
         except:
             print("Ошибка. Возврат оригинала")
-            return text
+            return text, False
 
     def close(self):
         self.save_cache_to_file()

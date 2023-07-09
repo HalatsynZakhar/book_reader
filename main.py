@@ -1229,22 +1229,22 @@ class MyWindow(QWidget):
         """
         if self.language_combo_translate.currentData() == self.language_combo_translate:
             return text
-        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData(),
+        text_res, marker = self.translator.my_translate(text, dest=self.language_combo_translate.currentData(),
                                                 alternative_translate=alternative_translate)
-        return text_res
+        return text_res, marker
 
     def google_Translate_to_trans_with_eng(self, text):
         """функция используется для перевода с английского на родной"""
         if self.language_combo_translate.currentData() == "en":
             return text
-        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData())
+        text_res, marker = self.translator.my_translate(text, dest=self.language_combo_translate.currentData())
         return text_res
 
     def google_Translate_to_orig_with_Eng(self, text):
         """для перевода с английского на язык изучения"""
         if self.language_combo_original == "en":
             return text
-        text_res = self.translator.my_translate(text, dest=self.language_combo_original.currentData())
+        text_res, marker = self.translator.my_translate(text, dest=self.language_combo_original.currentData())
         return text_res
 
     def google_Translate_init(self, text):
@@ -1252,7 +1252,7 @@ class MyWindow(QWidget):
         if self.default_language_trans == "en":
             return text
         """Use default settings"""
-        text_res = self.translator.my_translate(text, dest=self.default_language_trans)
+        text_res, marker = self.translator.my_translate(text, dest=self.default_language_trans)
         return text_res
 
     def next_button_clicked(self):
@@ -1480,7 +1480,7 @@ class MyWindow(QWidget):
         lang_trans = self.language_combo_translate.currentData()
         lang_trans = langcodes.Language(lang_trans).language_name().lower()
 
-        text_trans = self.google_Translate_to_trans_with_random_lang(self.currentParagraph,
+        text_trans, marker = self.google_Translate_to_trans_with_random_lang(self.currentParagraph,
                                                                      alternative_translate=alternative_translate)
 
         prior = 0
@@ -1488,6 +1488,10 @@ class MyWindow(QWidget):
         list_sentences = self.nltk_decorator.sent_tokenize(self.currentParagraph, language=lang_orig)
         list_sentences_trans = self.nltk_decorator.sent_tokenize(text_trans, language=lang_trans)
         list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+
+        if not marker:
+            return float('inf'), list_sentences, list_sentences_trans
+
         if len(list_sentences) != len(list_sentences_trans):
             prior += 1
             text = "".join([i if i.isalpha() else unidecode(i) for i in self.currentParagraph])
@@ -1497,7 +1501,7 @@ class MyWindow(QWidget):
                                                                                      list_sentences_trans)
             if len(list_sentences) != len(list_sentences_trans):
                 prior += 1
-                text_translate = self.google_Translate_to_trans_with_random_lang(text,
+                text_translate, marker = self.google_Translate_to_trans_with_random_lang(text,
                                                                                  alternative_translate=alternative_translate)
                 self.list_sentences_trans = self.nltk_decorator.sent_tokenize(text_translate, language=lang_trans)
 
