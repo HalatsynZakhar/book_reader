@@ -17,7 +17,7 @@ class CachedTranslator(Cached):
             key = str((text, dest, src, alternative_translate))
             res = self.get(key)
             if res != "":
-                return res, True
+                return res
 
             if alternative_translate == 0:
                 print("translators: Bing")
@@ -48,10 +48,10 @@ class CachedTranslator(Cached):
 
             self.set(key, res)
 
-            return res, True
+            return res
         except:
             print("Ошибка. Возврат оригинала")
-            return text, False
+            return text
 
     def close(self):
         self.save_cache_to_file()

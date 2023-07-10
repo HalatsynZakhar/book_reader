@@ -1229,22 +1229,22 @@ class MyWindow(QWidget):
         """
         if self.language_combo_translate.currentData() == self.language_combo_translate:
             return text
-        text_res, marker = self.translator.my_translate(text, dest=self.language_combo_translate.currentData(),
+        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData(),
                                                 alternative_translate=alternative_translate)
-        return text_res, marker
+        return text_res
 
     def google_Translate_to_trans_with_eng(self, text):
         """функция используется для перевода с английского на родной"""
         if self.language_combo_translate.currentData() == "en":
             return text
-        text_res, marker = self.translator.my_translate(text, dest=self.language_combo_translate.currentData())
+        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData())
         return text_res
 
     def google_Translate_to_orig_with_Eng(self, text):
         """для перевода с английского на язык изучения"""
         if self.language_combo_original == "en":
             return text
-        text_res, marker = self.translator.my_translate(text, dest=self.language_combo_original.currentData())
+        text_res = self.translator.my_translate(text, dest=self.language_combo_original.currentData())
         return text_res
 
     def google_Translate_init(self, text):
@@ -1252,7 +1252,7 @@ class MyWindow(QWidget):
         if self.default_language_trans == "en":
             return text
         """Use default settings"""
-        text_res, marker = self.translator.my_translate(text, dest=self.default_language_trans)
+        text_res = self.translator.my_translate(text, dest=self.default_language_trans)
         return text_res
 
     def next_button_clicked(self):
@@ -1458,14 +1458,41 @@ class MyWindow(QWidget):
 
         list_res = []
 
+
+        lang_orig = self.language_combo_original.currentData()
+        lang_orig = langcodes.Language(lang_orig).language_name().lower()
+        lang_trans = self.language_combo_translate.currentData()
+        lang_trans = langcodes.Language(lang_trans).language_name().lower()
+
+
+
+        save_dict = {}
         n = 8
-        for i in range(n):
-            list_res.append(self.filter_sentence(alternative_translate=i))
-            if list_res[i][0] == 0:
+        flag = False
+
+
+        for step in range(6):
+            """количество этапов фильтрации. """
+
+            for i in range(n):
+
+
+                """Перебираем все виды переводчика"""
+                text, text_trans, list_sentences, list_sentences_trans = save_dict.get(i, (self.currentParagraph, "", [], []))
+                text_1, text_trans_1, list_sentences_1, list_sentences_trans_1 = self.filter_sentence(text, text_trans, list_sentences, list_sentences_trans, lang_orig, lang_trans, step, alternative_translate=i)
+                save_dict[i] = text_1, text_trans_1, list_sentences_1, list_sentences_trans_1
+
+                print("Ступень {} фильтрации. Переводчик {}. {}, {}".format(step, i, list_sentences_1,
+                                                                            list_sentences_trans_1))
+                if len(list_sentences_1) == len(list_sentences_trans_1):
+                    self.list_sentences = list_sentences_1
+                    self.list_sentences_trans = list_sentences_trans_1
+
+                    flag = True
+                    break
+
+            if flag:
                 break
-        min_index = min(range(len(list_res)), key=lambda i: list_res[i][0])
-        self.list_sentences = list_res[min_index][1]
-        self.list_sentences_trans = list_res[min_index][2]
 
         for i in list_res:
             print(i)
@@ -1473,116 +1500,91 @@ class MyWindow(QWidget):
         if out:
             self.output_paragraph()
 
-    def filter_sentence(self, alternative_translate=0):
-        lang_orig = self.language_combo_original.currentData()
-        lang_orig = langcodes.Language(lang_orig).language_name().lower()
 
-        lang_trans = self.language_combo_translate.currentData()
-        lang_trans = langcodes.Language(lang_trans).language_name().lower()
+    def filter_sentence(self, text, text_trans, list_sentences, list_sentences_trans, lang_orig, lang_trans, step, alternative_translate=0):
 
-        text_trans, marker = self.google_Translate_to_trans_with_random_lang(self.currentParagraph,
-                                                                     alternative_translate=alternative_translate)
 
-        prior = 0
-
-        list_sentences = self.nltk_decorator.sent_tokenize(self.currentParagraph, language=lang_orig)
-        list_sentences_trans = self.nltk_decorator.sent_tokenize(text_trans, language=lang_trans)
-        list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
-
-        if not marker:
-            return float('inf'), list_sentences, list_sentences_trans
-
-        if len(list_sentences) != len(list_sentences_trans):
-            prior += 1
-            text = "".join([i if i.isalpha() else unidecode(i) for i in self.currentParagraph])
-            list_sentences = self.nltk_decorator.sent_tokenize(text, language=lang_orig)
-
-            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
-                                                                                     list_sentences_trans)
-            if len(list_sentences) != len(list_sentences_trans):
-                prior += 1
-                text_translate, marker = self.google_Translate_to_trans_with_random_lang(text,
+        if step==0:
+            text_trans = self.google_Translate_to_trans_with_random_lang(text,
                                                                                  alternative_translate=alternative_translate)
-                self.list_sentences_trans = self.nltk_decorator.sent_tokenize(text_translate, language=lang_trans)
+            """Нулевой фильтр. """
+            list_sentences = self.nltk_decorator.sent_tokenize(self.currentParagraph, language=lang_orig)
+            list_sentences_trans = self.nltk_decorator.sent_tokenize(text_trans, language=lang_trans)
 
+        elif step==1:
+            """1. Обрабатывется входной текст на наличие необычных символов. Перевод используется старый, с фильтра 0"""
+
+            text = "".join([i if i.isalpha() else unidecode(i) for i in text])
+            text_trans = "".join([i if i.isalpha() else unidecode(i) for i in text_trans])
+
+            list_sentences = self.nltk_decorator.sent_tokenize(text, language=lang_orig)
+            list_sentences_trans = self.nltk_decorator.sent_tokenize(text_trans, language=lang_trans)
+
+            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+
+
+        elif step==2:
+            """2. разбиение на предложение делается с помощью регулярки"""
+
+            list_sentences = re.findall(r'(?s)(.*?(?:[.?!]|$))', text)
+            list_sentences_trans = re.findall(r'(?s)(.*?(?:[.?!]|$))', text_trans)
+
+        elif step==3:
+            """3. Разбиение циклом по точкам"""
+
+            list_sentences = [""]
+            count = 0
+            for i in text:
+                if i == ".":
+                    list_sentences.append("")
+                    list_sentences[count] += i
+                    count += 1
+                else:
+                    list_sentences[count] += i
+
+            list_sentences_trans = [""]
+            count = 0
+            for i in text_trans:
+                if i == ".":
+                    list_sentences_trans.append("")
+                    list_sentences_trans[count] += i
+                    count += 1
+                else:
+                    list_sentences_trans[count] += i
+
+
+        elif step==4:
+            """4. По большим буквам"""
+            count = 0
+            for i in text:
+                if i.isupper():
+                    list_sentences.append("")
+                    count += 1
+
+                list_sentences[count] += i
+
+            list_sentences_trans = [""]
+            count = 0
+            for i in text_trans:
+                if i.isupper():
+                    list_sentences_trans.append("")
+                    count += 1
+                list_sentences_trans[count] += i
+
+        elif step==5:
+            """5. Разбиение по количество слов на максимально маленькие промежутки"""
+
+            count = 5
+            while len(list_sentences) != len(list_sentences_trans):
+                list_sentences, list_sentences_trans = self.parsing_paragraph(text, text_trans, count)
+                count += 5
                 list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
                                                                                          list_sentences_trans)
-                if len(list_sentences) != len(list_sentences_trans):
-                    prior += 1
-                    list_sentences = re.findall(r'(?s)(.*?(?:[.?!]|$))', text)
-                    list_sentences_trans = re.findall(r'(?s)(.*?(?:[.?!]|$))', text_translate)
 
-                    list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
-                                                                                             list_sentences_trans)
-                    if len(list_sentences) != len(list_sentences_trans):
-                        prior += 1
+        list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+        return text, text_trans, list_sentences, list_sentences_trans
 
-                        list_sentences = [""]
-                        count = 0
-                        for i in text:
-                            if i == ".":
-                                list_sentences.append("")
-                                list_sentences[count] += i
-                                count += 1
-                            else:
-                                list_sentences[count] += i
-
-                        list_sentences_trans = [""]
-                        count = 0
-                        for i in text_translate:
-                            if i == ".":
-                                list_sentences_trans.append("")
-                                list_sentences_trans[count] += i
-                                count += 1
-                            else:
-                                list_sentences_trans[count] += i
-
-                        list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
-                                                                                                 list_sentences_trans)
-                        if len(list_sentences) != len(list_sentences_trans):
-                            prior += 1
-
-                            list_sentences = [""]
-                            count = 0
-                            for i in text:
-                                if i.isupper():
-                                    list_sentences.append("")
-                                    count += 1
-
-                                list_sentences[count] += i
-
-                            list_sentences_trans = [""]
-                            count = 0
-                            for i in text_translate:
-                                if i.isupper():
-                                    list_sentences_trans.append("")
-                                    count += 1
-                                list_sentences_trans[count] += i
-
-                            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
-                                                                                                     list_sentences_trans)
-
-                            count = 5
-                            while len(list_sentences) != len(list_sentences_trans):
-                                prior += 1
-                                list_sentences, list_sentences_trans = self.parsing_paragraph(list_sentences,
-                                                                                              list_sentences_trans,
-                                                                                              text, text_translate,
-                                                                                              count)
-                                count += 5
-
-                                list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
-                                                                                                         list_sentences_trans)
-
-                            """
-                            if len(self.list_sentences) != len(self.list_sentences_trans):
-                                print(9, end="")
-                                self.list_sentences = [self.currentParagraph]
-                                self.list_sentences_trans = [text_trans]
-                            """
-        return prior, list_sentences, list_sentences_trans
-
-    def parsing_paragraph(self, list_sentences, list_sentences_trans, text, text_translate, max):
+    def parsing_paragraph(self, text, text_trans, max):
         list_sentences = [""]
         count = 0
         check = 0
@@ -1599,7 +1601,7 @@ class MyWindow(QWidget):
         list_sentences_trans = [""]
         count = 0
         check = 0
-        for i in text_translate:
+        for i in text_trans:
             if i == " ":
                 if check == max:
                     list_sentences_trans.append("")
