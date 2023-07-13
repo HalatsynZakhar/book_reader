@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import threading
+from functools import lru_cache
 from itertools import product
 
 import chardet
@@ -41,11 +42,13 @@ class MyWindow(QWidget):
         pygame.init()
         # эта биллиотека используется, чтобы избежать преырвания в блютуз наушинках
 
-        self.lock = threading.Lock()
+        self.lock_translate_paragraph_thread = threading.Lock()
+        self.lock_audio_thread = threading.Lock()
         self.stop_flag = threading.Event()
 
         # Создание экземпляра CachedTranslator
-        self.translator = CachedTranslator("cached_translate.xml")
+        self.translator_interface = CachedTranslator("cached_translate_interface.xml")
+        self.translator_books_and_songs = CachedTranslator("cached_translator_books_and_songs.xml")
         self.cached_Music = Cached("cached_music.xml")
 
         self.download_settings()
@@ -1175,7 +1178,7 @@ class MyWindow(QWidget):
         self.stop_flag = threading.Event()
         self.thread = AudioThread(self.list_sentences[self.count], self.spin_box_playback_speed.value(),
                                   self.language_combo_original.currentData(), self.stop_flag,
-                                  self.lock,
+                                  self.lock_audio_thread,
                                   self.switch_auto_play.isChecked())
         self.thread.finished.connect(self.auto_go_next)
         self.thread.start()
@@ -1229,22 +1232,23 @@ class MyWindow(QWidget):
         """
         if self.language_combo_translate.currentData() == self.language_combo_translate:
             return text
-        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData(),
-                                                alternative_translate=alternative_translate)
+        text_res = self.translator_books_and_songs.my_translate(text, dest=self.language_combo_translate.currentData(),
+                                                                alternative_translate=alternative_translate,
+                                                                no_return=True)
         return text_res
 
     def google_Translate_to_trans_with_eng(self, text):
         """функция используется для перевода с английского на родной"""
         if self.language_combo_translate.currentData() == "en":
             return text
-        text_res = self.translator.my_translate(text, dest=self.language_combo_translate.currentData())
+        text_res = self.translator_interface.my_translate(text, dest=self.language_combo_translate.currentData())
         return text_res
 
     def google_Translate_to_orig_with_Eng(self, text):
         """для перевода с английского на язык изучения"""
         if self.language_combo_original == "en":
             return text
-        text_res = self.translator.my_translate(text, dest=self.language_combo_original.currentData())
+        text_res = self.translator_interface.my_translate(text, dest=self.language_combo_original.currentData())
         return text_res
 
     def google_Translate_init(self, text):
@@ -1252,7 +1256,7 @@ class MyWindow(QWidget):
         if self.default_language_trans == "en":
             return text
         """Use default settings"""
-        text_res = self.translator.my_translate(text, dest=self.default_language_trans)
+        text_res = self.translator_interface.my_translate(text, dest=self.default_language_trans)
         return text_res
 
     def next_button_clicked(self):
@@ -1449,6 +1453,32 @@ class MyWindow(QWidget):
         list_sentences_trans = [x.strip() for x in list_sentences_trans if unidecode(x) not in self.combinations]
         return list_sentences, list_sentences_trans
 
+    @lru_cache(maxsize=None)
+    def generate_translate_paragraph(self, lang_orig, lang_trans, currentParagraph):
+        save_dict = {}
+        n = 8
+
+        for step in range(6):
+            """количество этапов фильтрации. """
+
+            for i in range(n):
+
+                """Перебираем все виды переводчика"""
+                text, text_trans, list_sentences, list_sentences_trans = save_dict.get(i,
+                                                                                       (currentParagraph, "", [], []))
+                text_1, text_trans_1, list_sentences_1, list_sentences_trans_1 = self.filter_sentence(text, text_trans,
+                                                                                                      list_sentences,
+                                                                                                      list_sentences_trans,
+                                                                                                      lang_orig,
+                                                                                                      lang_trans, step,
+                                                                                                      alternative_translate=i)
+                save_dict[i] = text_1, text_trans_1, list_sentences_1, list_sentences_trans_1
+
+                print("Ступень {} фильтрации. Переводчик {}. {}, {}".format(step, i, list_sentences_1,
+                                                                            list_sentences_trans_1))
+                if len(list_sentences_1) == len(list_sentences_trans_1):
+                    return list_sentences_1, list_sentences_trans_1
+
     def formint_output_text(self, out=True):
         print(inspect.currentframe().f_code.co_name + ": ")
 
@@ -1456,62 +1486,48 @@ class MyWindow(QWidget):
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
 
-        list_res = []
-
-
         lang_orig = self.language_combo_original.currentData()
         lang_orig = langcodes.Language(lang_orig).language_name().lower()
         lang_trans = self.language_combo_translate.currentData()
         lang_trans = langcodes.Language(lang_trans).language_name().lower()
 
+        self.lock_translate_paragraph_thread.acquire()  # запрос блокировки
 
+        self.list_sentences, self.list_sentences_trans = self.generate_translate_paragraph(lang_orig, lang_trans,
+                                                                                           self.currentParagraph)
 
-        save_dict = {}
-        n = 8
-        flag = False
+        self.lock_translate_paragraph_thread.release()  # освобождение блокировки
 
-
-        for step in range(6):
-            """количество этапов фильтрации. """
-
-            for i in range(n):
-
-
-                """Перебираем все виды переводчика"""
-                text, text_trans, list_sentences, list_sentences_trans = save_dict.get(i, (self.currentParagraph, "", [], []))
-                text_1, text_trans_1, list_sentences_1, list_sentences_trans_1 = self.filter_sentence(text, text_trans, list_sentences, list_sentences_trans, lang_orig, lang_trans, step, alternative_translate=i)
-                save_dict[i] = text_1, text_trans_1, list_sentences_1, list_sentences_trans_1
-
-                print("Ступень {} фильтрации. Переводчик {}. {}, {}".format(step, i, list_sentences_1,
-                                                                            list_sentences_trans_1))
-                if len(list_sentences_1) == len(list_sentences_trans_1):
-                    self.list_sentences = list_sentences_1
-                    self.list_sentences_trans = list_sentences_trans_1
-
-                    flag = True
-                    break
-
-            if flag:
-                break
-
-        for i in list_res:
-            print(i)
+        if self.bookmark != len(self.list_paragraph) - 1:
+            thread = threading.Thread(
+                target=self.parallel_function(lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+            thread.start()
 
         if out:
             self.output_paragraph()
 
+    def parallel_function(self, lang_orig, lang_trans, current_paragraph):
+        print(inspect.currentframe().f_code.co_name + ": ", end="")
 
-    def filter_sentence(self, text, text_trans, list_sentences, list_sentences_trans, lang_orig, lang_trans, step, alternative_translate=0):
+        self.lock_translate_paragraph_thread.acquire()  # запрос блокировки
+
+        print("Выполняется...")
+        self.generate_translate_paragraph(lang_orig, lang_trans, current_paragraph)
 
 
-        if step==0:
+        self.lock_translate_paragraph_thread.release()  # освобождение блокировки
+
+    def filter_sentence(self, text, text_trans, list_sentences, list_sentences_trans, lang_orig, lang_trans, step,
+                        alternative_translate=0):
+
+        if step == 0:
             text_trans = self.google_Translate_to_trans_with_random_lang(text,
-                                                                                 alternative_translate=alternative_translate)
+                                                                         alternative_translate=alternative_translate)
             """Нулевой фильтр. """
-            list_sentences = self.nltk_decorator.sent_tokenize(self.currentParagraph, language=lang_orig)
+            list_sentences = self.nltk_decorator.sent_tokenize(text, language=lang_orig)
             list_sentences_trans = self.nltk_decorator.sent_tokenize(text_trans, language=lang_trans)
 
-        elif step==1:
+        elif step == 1:
             """1. Обрабатывется входной текст на наличие необычных символов. Перевод используется старый, с фильтра 0"""
 
             text = "".join([i if i.isalpha() else unidecode(i) for i in text])
@@ -1520,16 +1536,17 @@ class MyWindow(QWidget):
             list_sentences = self.nltk_decorator.sent_tokenize(text, language=lang_orig)
             list_sentences_trans = self.nltk_decorator.sent_tokenize(text_trans, language=lang_trans)
 
-            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
+            list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
+                                                                                     list_sentences_trans)
 
 
-        elif step==2:
+        elif step == 2:
             """2. разбиение на предложение делается с помощью регулярки"""
 
             list_sentences = re.findall(r'(?s)(.*?(?:[.?!]|$))', text)
             list_sentences_trans = re.findall(r'(?s)(.*?(?:[.?!]|$))', text_trans)
 
-        elif step==3:
+        elif step == 3:
             """3. Разбиение циклом по точкам"""
 
             list_sentences = [""]
@@ -1553,7 +1570,7 @@ class MyWindow(QWidget):
                     list_sentences_trans[count] += i
 
 
-        elif step==4:
+        elif step == 4:
             """4. По большим буквам"""
             count = 0
             for i in text:
@@ -1571,7 +1588,7 @@ class MyWindow(QWidget):
                     count += 1
                 list_sentences_trans[count] += i
 
-        elif step==5:
+        elif step == 5:
             """5. Разбиение по количество слов на максимально маленькие промежутки"""
 
             count = 5
@@ -1707,7 +1724,8 @@ class MyWindow(QWidget):
         self.stop_flag.set()
         pygame.quit()
 
-        self.translator.close()
+        self.translator_interface.close()
+        self.translator_books_and_songs.close()
         self.cached_Music.save_cache_to_file()
         # вызываем родительский метод closeEvent()
         super().closeEvent(event)

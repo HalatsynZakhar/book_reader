@@ -11,7 +11,7 @@ except:
 class CachedTranslator(Cached):
     def __init__(self, file):
         Cached.__init__(self, file, cache_size=10000)
-    def my_translate(self, text, dest='en', src='auto', alternative_translate=0):
+    def my_translate(self, text, dest='en', src='auto', alternative_translate=0, no_return=False):
         try:
             print("translate:", end=" ")
             key = str((text, dest, src, alternative_translate))
@@ -50,8 +50,11 @@ class CachedTranslator(Cached):
 
             return res
         except:
-            print("Ошибка. Возврат оригинала")
-            return text
+            print("Ошибка у переводчика.")
+            if no_return:
+                return ""
+            else:
+                return text
 
     def close(self):
         self.save_cache_to_file()
