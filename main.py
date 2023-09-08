@@ -4,8 +4,9 @@ import os
 import re
 import sys
 import threading
-from functools import lru_cache
+from functools import lru_cache, partial
 from itertools import product
+from time import sleep
 
 import chardet
 import requests
@@ -1498,10 +1499,32 @@ class MyWindow(QWidget):
 
         self.lock_translate_paragraph_thread.release()  # освобождение блокировки
 
-        if self.bookmark != len(self.list_paragraph) - 1:
+        if self.bookmark < len(self.list_paragraph) - 1:
             thread = threading.Thread(
-                target=self.parallel_function(lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+                target=partial(self.parallel_function, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
             thread.start()
+
+        if self.bookmark < len(self.list_paragraph) - 2:
+            thread = threading.Thread(
+                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+            thread.start()
+
+        if self.bookmark < len(self.list_paragraph) - 3:
+            thread = threading.Thread(
+                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+            thread.start()
+
+        if self.bookmark < len(self.list_paragraph) - 4:
+            thread = threading.Thread(
+                target=partial(self.parallel_function_without_block, lang_orig, lang_trans,
+                               self.list_paragraph[self.bookmark + 1]))
+            thread.start()
+
+        if self.bookmark < len(self.list_paragraph) - 5:
+            thread = threading.Thread(
+                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+            thread.start()
+
 
         if out:
             self.output_paragraph()
@@ -1514,8 +1537,12 @@ class MyWindow(QWidget):
         print("Выполняется...")
         self.generate_translate_paragraph(lang_orig, lang_trans, current_paragraph)
 
-
         self.lock_translate_paragraph_thread.release()  # освобождение блокировки
+    def parallel_function_without_block(self, lang_orig, lang_trans, current_paragraph):
+        print(inspect.currentframe().f_code.co_name + ": ", end="")
+
+        print("Выполняется...")
+        self.generate_translate_paragraph(lang_orig, lang_trans, current_paragraph)
 
     def filter_sentence(self, text, text_trans, list_sentences, list_sentences_trans, lang_orig, lang_trans, step,
                         alternative_translate=0):
