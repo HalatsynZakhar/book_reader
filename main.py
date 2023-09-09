@@ -1506,23 +1506,23 @@ class MyWindow(QWidget):
 
         if self.bookmark < len(self.list_paragraph) - 2:
             thread = threading.Thread(
-                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 2]))
             thread.start()
 
         if self.bookmark < len(self.list_paragraph) - 3:
             thread = threading.Thread(
-                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 3]))
             thread.start()
 
         if self.bookmark < len(self.list_paragraph) - 4:
             thread = threading.Thread(
                 target=partial(self.parallel_function_without_block, lang_orig, lang_trans,
-                               self.list_paragraph[self.bookmark + 1]))
+                               self.list_paragraph[self.bookmark + 4]))
             thread.start()
 
         if self.bookmark < len(self.list_paragraph) - 5:
             thread = threading.Thread(
-                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
+                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 5]))
             thread.start()
 
 
