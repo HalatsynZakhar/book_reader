@@ -43,7 +43,9 @@ class MyWindow(QWidget):
         pygame.init()
         # эта биллиотека используется, чтобы избежать преырвания в блютуз наушинках
 
-        self.lock_translate_paragraph_thread = threading.Lock()
+        # self.n_lock = 10
+        # self.lock_translate_paragraph_thread = [threading.Lock() for i in range(self.n_lock)]
+
         self.lock_audio_thread = threading.Lock()
         self.stop_flag = threading.Event()
 
@@ -1456,6 +1458,8 @@ class MyWindow(QWidget):
 
     @lru_cache(maxsize=None)
     def generate_translate_paragraph(self, lang_orig, lang_trans, currentParagraph):
+        print(inspect.currentframe().f_code.co_name + ": (не с кэша)")
+
         save_dict = {}
         n = 8
 
@@ -1492,57 +1496,20 @@ class MyWindow(QWidget):
         lang_trans = self.language_combo_translate.currentData()
         lang_trans = langcodes.Language(lang_trans).language_name().lower()
 
-        self.lock_translate_paragraph_thread.acquire()  # запрос блокировки
-
-        self.list_sentences, self.list_sentences_trans = self.generate_translate_paragraph(lang_orig, lang_trans,
-                                                                                           self.currentParagraph)
-
-        self.lock_translate_paragraph_thread.release()  # освобождение блокировки
-
-        if self.bookmark < len(self.list_paragraph) - 1:
-            thread = threading.Thread(
-                target=partial(self.parallel_function, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 1]))
-            thread.start()
-
-        if self.bookmark < len(self.list_paragraph) - 2:
-            thread = threading.Thread(
-                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 2]))
-            thread.start()
-
-        if self.bookmark < len(self.list_paragraph) - 3:
-            thread = threading.Thread(
-                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 3]))
-            thread.start()
-
-        if self.bookmark < len(self.list_paragraph) - 4:
-            thread = threading.Thread(
-                target=partial(self.parallel_function_without_block, lang_orig, lang_trans,
-                               self.list_paragraph[self.bookmark + 4]))
-            thread.start()
-
-        if self.bookmark < len(self.list_paragraph) - 5:
-            thread = threading.Thread(
-                target=partial(self.parallel_function_without_block, lang_orig, lang_trans, self.list_paragraph[self.bookmark + 5]))
-            thread.start()
-
+        for i in range(10):
+            if i == 0:
+                self.list_sentences, self.list_sentences_trans = self.generate_translate_paragraph(lang_orig,
+                                                                                                   lang_trans,
+                                                                                                   self.currentParagraph)
+            else:
+                if self.bookmark < len(self.list_paragraph) - i:
+                    thread = threading.Thread(
+                        target=partial(self.generate_translate_paragraph, lang_orig, lang_trans,
+                                       self.list_paragraph[self.bookmark + i]))
+                    thread.start()
 
         if out:
             self.output_paragraph()
-
-    def parallel_function(self, lang_orig, lang_trans, current_paragraph):
-        print(inspect.currentframe().f_code.co_name + ": ", end="")
-
-        self.lock_translate_paragraph_thread.acquire()  # запрос блокировки
-
-        print("Выполняется...")
-        self.generate_translate_paragraph(lang_orig, lang_trans, current_paragraph)
-
-        self.lock_translate_paragraph_thread.release()  # освобождение блокировки
-    def parallel_function_without_block(self, lang_orig, lang_trans, current_paragraph):
-        print(inspect.currentframe().f_code.co_name + ": ", end="")
-
-        print("Выполняется...")
-        self.generate_translate_paragraph(lang_orig, lang_trans, current_paragraph)
 
     def filter_sentence(self, text, text_trans, list_sentences, list_sentences_trans, lang_orig, lang_trans, step,
                         alternative_translate=0):
