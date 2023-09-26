@@ -1491,10 +1491,17 @@ class MyWindow(QWidget):
 
         self.currentParagraph = self.list_paragraph[self.bookmark]
 
-        lang_orig = self.language_combo_original.currentData()
-        lang_orig = langcodes.Language(lang_orig).language_name().lower()
-        lang_trans = self.language_combo_translate.currentData()
-        lang_trans = langcodes.Language(lang_trans).language_name().lower()
+        try:
+            lang_orig = self.language_combo_original.currentData()
+            lang_orig = langcodes.Language(lang_orig).language_name().lower()
+        except:
+            lang_orig = "en"
+
+        try:
+            lang_trans = self.language_combo_translate.currentData()
+            lang_trans = langcodes.Language(lang_trans).language_name().lower()
+        except:
+            lang_trans = "en"
 
         for i in range(10):
             if i == 0:
