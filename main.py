@@ -96,6 +96,7 @@ class MyWindow(QWidget):
         # создаем маленький вертикальный лейаут
         prev_buttons_layout = QVBoxLayout()
         horizontal_layout.addLayout(prev_buttons_layout)
+        horizontal_layout.setStretchFactor(prev_buttons_layout, 1)
 
         # создаем кнопку "prev prev" и добавляем ее в горизонтальный лейаут
         self.prev_prev_button = QPushButton(self.google_Translate_init("Previous paragraph") + " (Ctrl+Left)")
@@ -109,7 +110,7 @@ class MyWindow(QWidget):
 
         choice_lang_and_font_layout = QVBoxLayout()
         horizontal_layout.addLayout(choice_lang_and_font_layout)
-
+        horizontal_layout.setStretchFactor(choice_lang_and_font_layout, 1)
         # создаем маленький горизонтальный лейаут
         original_lang_layout = QHBoxLayout()
         choice_lang_and_font_layout.addLayout(original_lang_layout)
@@ -161,23 +162,7 @@ class MyWindow(QWidget):
         # создаем маленький вертикальный лейаут для аудио
         audio_setting_layout = QVBoxLayout()
         horizontal_layout.addLayout(audio_setting_layout)
-
-        # создаем кнопку "Repeat" и добавляем ее в вертикальний аудио лейаут
-        self.repeat_button = QPushButton(self.google_Translate_init("Repeat playback") + " (R)")
-        audio_setting_layout.addWidget(self.repeat_button)
-        self.repeat_button.setShortcut("R")
-
-        self.switch_audio = QCheckBox(self.google_Translate_init("Audio") + " (V)", self)
-        audio_setting_layout.addWidget(self.switch_audio)
-        self.switch_audio.setShortcut("V")
-        if self.audio_enabled:
-            self.switch_audio.toggle()
-
-        self.switch_auto_play = QCheckBox(self.google_Translate_init("Autoplay") + " (Space)", self)
-        audio_setting_layout.addWidget(self.switch_auto_play)
-        self.switch_auto_play.setShortcut("Space")
-        if self.auto_play:
-            self.switch_auto_play.toggle()
+        horizontal_layout.setStretchFactor(audio_setting_layout, 1)
 
         playback_speed_layout = QHBoxLayout()
         audio_setting_layout.addLayout(playback_speed_layout)
@@ -187,85 +172,100 @@ class MyWindow(QWidget):
 
         self.spin_box_playback_speed = QDoubleSpinBox()
         playback_speed_layout.addWidget(self.spin_box_playback_speed)
+
         self.spin_box_playback_speed.setMinimum(0.25)
         self.spin_box_playback_speed.setMaximum(4.0)
         self.spin_box_playback_speed.setSingleStep(0.1)
         self.spin_box_playback_speed.setValue(self.playback_speed)
-        playback_speed_layout.addWidget(self.spin_box_playback_speed)
 
-        # создаем маленький вертикальный лейаут
-        go_to_page_layout = QVBoxLayout()
-        horizontal_layout.addLayout(go_to_page_layout)
+        audio_switch_layout = QHBoxLayout()
+        audio_setting_layout.addLayout(audio_switch_layout)
+
+        self.switch_audio = QCheckBox(self.google_Translate_init("Audio") + " (V)", self)
+        audio_switch_layout.addWidget(self.switch_audio)
+        self.switch_audio.setShortcut("V")
+        if self.audio_enabled:
+            self.switch_audio.toggle()
+
+        self.switch_auto_play = QCheckBox(self.google_Translate_init("Autoplay") + " (Space)", self)
+        audio_switch_layout.addWidget(self.switch_auto_play)
+        self.switch_auto_play.setShortcut("Space")
+        if self.auto_play:
+            self.switch_auto_play.toggle()
+
+        # создаем кнопку "Repeat" и добавляем ее в вертикальний аудио лейаут
+        self.repeat_button = QPushButton(self.google_Translate_init("Repeat playback") + " (R)")
+        audio_setting_layout.addWidget(self.repeat_button)
+        self.repeat_button.setShortcut("R")
+
+        go_to_page = QVBoxLayout()
+        horizontal_layout.addLayout(go_to_page)
+        horizontal_layout.setStretchFactor(go_to_page, 1)
+
+        go_to_page1 = QHBoxLayout()
+        go_to_page.addLayout(go_to_page1)
 
         # создаем кнопку "go to page" и добавляем ее в горизонтальный лейаут
         self.go_to_page_label = QLabel(self.google_Translate_init("Go to page:"))
-        go_to_page_layout.addWidget(self.go_to_page_label)
-        self.go_to_page_label.setMinimumWidth(80)
-        self.go_to_page_label.setAlignment(Qt.AlignCenter)
+        go_to_page1.addWidget(self.go_to_page_label)
 
         # создаем input поле и добавляем его в горизонтальный лейаут
         self.input_field = QLineEdit()
-        go_to_page_layout.addWidget(self.input_field)
-        self.input_field.setMinimumWidth(80)
-        self.input_field.setMaximumWidth(120)
-        self.input_field.setAlignment(QtCore.Qt.AlignCenter)
+        go_to_page1.addWidget(self.input_field)
+
+        tmpt = QHBoxLayout()
+        go_to_page.addLayout(tmpt)
+
+        page_info1 = QVBoxLayout()
+        tmpt.addLayout(page_info1)
+
+        page_info2 = QVBoxLayout()
+        tmpt.addLayout(page_info2)
+
+        self.switch_Hide_current_page = QCheckBox(self.google_Translate_init("View current page"), self)
+        page_info1.addWidget(self.switch_Hide_current_page)
+        if self.view_current_page:
+            self.switch_Hide_current_page.toggle()
+
+        # создаем label "???" и добавляем его в горизонтальный лейаут
+        self.current_page_label = QLabel("?")
+        page_info2.addWidget(self.current_page_label)
+
+        self.switch_Hide_all_pages = QCheckBox(self.google_Translate_init("View all pages"), self)
+        page_info1.addWidget(self.switch_Hide_all_pages)
+        if self.view_all_pages:
+            self.switch_Hide_all_pages.toggle()
+
+        # создаем label "???" и добавляем его в горизонтальный лейаут
+        self.all_pages_label = QLabel("?")
+        page_info2.addWidget(self.all_pages_label)
 
         # создаем маленький вертикальный лейаут
         pages_layout = QVBoxLayout()
         horizontal_layout.addLayout(pages_layout)
+        horizontal_layout.setStretchFactor(pages_layout, 1)
 
         self.switch_use_cursor = QCheckBox(self.google_Translate_init("Left click navigation"), self)
         pages_layout.addWidget(self.switch_use_cursor)
         if self.use_cursor:
             self.switch_use_cursor.toggle()
 
-        # создаем маленький гор лейаут
-        curr_page = QHBoxLayout()
-        pages_layout.addLayout(curr_page)
-
-        self.switch_Hide_current_page = QCheckBox(self.google_Translate_init("View current page"), self)
-        curr_page.addWidget(self.switch_Hide_current_page)
-        self.switch_Hide_current_page.setMinimumWidth(200)
-        if self.view_current_page:
-            self.switch_Hide_current_page.toggle()
-
-        # создаем label "???" и добавляем его в горизонтальный лейаут
-        self.current_page_label = QLabel("?")
-        curr_page.addWidget(self.current_page_label)
-        self.current_page_label.setMinimumWidth(60)
-        self.current_page_label.setAlignment(Qt.AlignCenter)
-
-        # создаем маленький гор лейаут
-        all_page = QHBoxLayout()
-        pages_layout.addLayout(all_page)
-
-        self.switch_Hide_all_pages = QCheckBox(self.google_Translate_init("View all pages"), self)
-        all_page.addWidget(self.switch_Hide_all_pages)
-        self.switch_Hide_all_pages.setMinimumWidth(200)
-        if self.view_all_pages:
-            self.switch_Hide_all_pages.toggle()
-
-        # создаем label "???" и добавляем его в горизонтальный лейаут
-        self.all_pages_label = QLabel("?")
-        all_page.addWidget(self.all_pages_label)
-        self.all_pages_label.setMinimumWidth(60)
-        self.all_pages_label.setAlignment(Qt.AlignCenter)
-
-        # создаем маленький вертикальный лейаут
-        toggle_and_aljust_layout = QVBoxLayout()
-        horizontal_layout.addLayout(toggle_and_aljust_layout)
-
         self.switch_visible_trans = QCheckBox(self.google_Translate_init("Translation display") + " (T)", self)
-        toggle_and_aljust_layout.addWidget(self.switch_visible_trans)
+        pages_layout.addWidget(self.switch_visible_trans)
         self.switch_visible_trans.setShortcut("T")
         if self.visible_trans:
             self.switch_visible_trans.toggle()
 
         self.switch_center = QCheckBox(self.google_Translate_init("Center alignment") + " (E)", self)
-        toggle_and_aljust_layout.addWidget(self.switch_center)
+        pages_layout.addWidget(self.switch_center)
         self.switch_center.setShortcut("E")
         if self.center_setting:
             self.switch_center.toggle()
+
+        # создаем маленький вертикальный лейаут
+        toggle_and_aljust_layout = QVBoxLayout()
+        horizontal_layout.addLayout(toggle_and_aljust_layout)
+        horizontal_layout.setStretchFactor(toggle_and_aljust_layout, 1)
 
         self.switch_night_mode = QCheckBox(self.google_Translate_init("Night mode") + " (N)", self)
         toggle_and_aljust_layout.addWidget(self.switch_night_mode)
@@ -277,9 +277,14 @@ class MyWindow(QWidget):
         self.settings_button = QPushButton(self.google_Translate_init("Interface settings"), self)
         toggle_and_aljust_layout.addWidget(self.settings_button)
 
+        # Создаем кнопку настроек переводчика
+        self.settings_translation_button = QPushButton(self.google_Translate_init("Translation settings"), self)
+        toggle_and_aljust_layout.addWidget(self.settings_translation_button)
+
         # создаем маленький вертикальный лейаут
         next_next_layout = QVBoxLayout()
         horizontal_layout.addLayout(next_next_layout)
+        horizontal_layout.setStretchFactor(next_next_layout, 1)
 
         # создаем кнопку "next" и добавляем ее в горизонтальный лейаут
         self.next_next_button = QPushButton(self.google_Translate_init("next paragraph") + " (Ctrl+Right)")
@@ -365,6 +370,7 @@ class MyWindow(QWidget):
         self.switch_audio.stateChanged.connect(self.audio_switch)
         self.repeat_button.clicked.connect(self.play_audio)
         self.settings_button.clicked.connect(self.open_settings_dialog)
+        self.settings_translation_button.clicked.connect(self.open_translation_settings_dialog)
 
         # Соединение событий прокрутки колесика мыши и изменения размера шрифта в text_browser
         self.spin_box.valueChanged.connect(self.changeFont_valueChanged)
@@ -372,7 +378,6 @@ class MyWindow(QWidget):
 
         self.switch_Hide_all_pages.stateChanged.connect(self.hide_all_pages)
         self.switch_Hide_current_page.stateChanged.connect(self.hide_curren_page)
-        self.spin_box.setMaximumWidth(40)
         self.spin_box.setMinimum(1)
         self.spin_box.setMaximum(999)
 
@@ -485,16 +490,100 @@ class MyWindow(QWidget):
         self.input_path_to_file.setText(selected_bookmark)
         self.handle_editing_path()
 
+    def open_translation_settings_dialog(self):
+        print(inspect.currentframe().f_code.co_name)
+
+        # Создаем диалоговое окно настроек интерфейса
+        settings_dialog = QDialog(self)
+
+        settings_dialog.setWindowTitle(self.translate_original_prior_transl_dialog[0])
+
+        main_layout = QVBoxLayout()
+
+        print(self.default_seq_transl)
+        count = 1
+
+        horiz = QHBoxLayout()
+        main_layout.addLayout(horiz)
+
+        lab = QLabel(self.translate_original_prior_transl_dialog[1])
+        horiz.addWidget(lab)
+        horiz.setStretchFactor(lab, 1)
+
+        lab2 = QLabel(self.translate_original_prior_transl_dialog[2])
+        horiz.addWidget(lab2)
+        horiz.setStretchFactor(lab2, 1)
+
+        spin_boxes = []
+
+        def check_values():
+            # Получаем список значений всех spin box
+            values = [spin_box.value() for spin_box in spin_boxes]
+            # Проверяем, есть ли повторяющиеся значения
+            for i in range(len(values)):
+                for j in range(i + 1, len(values)):
+                    # Если два значения совпадают, устанавливаем второе в ноль (отключаенм)
+                    if (values[i] == values[j]) and values[i] != 0:
+                        values[j] = 0
+
+            # Устанавливаем новые значения для всех spin box
+            for i in range(len(values)):
+                spin_boxes[i].setValue(values[i])
+            self.default_seq_transl = values
+            self.settings.setValue("default_seq_transl", self.default_seq_transl)
+
+        count = 0
+        for i in self.translator_interface.translators:
+            horiz = QHBoxLayout()
+            main_layout.addLayout(horiz)
+
+            lab = QLabel(i)
+
+            spin_box = QSpinBox()
+            spin_box.setRange(0, len(self.translator_interface.translators))
+            spin_box.setValue(self.default_seq_transl[count])
+            spin_boxes.append(spin_box)
+            spin_box.valueChanged.connect(check_values)
+
+            horiz.addWidget(lab)
+            horiz.setStretchFactor(lab, 1)
+
+            horiz.addWidget(spin_box)
+            horiz.setStretchFactor(spin_box, 1)
+
+            count += 1
+
+        default_button = QPushButton(self.translate_original_prior_transl_dialog[3])
+
+        def reset():
+            for i in range(len(self.default_seq_transl)):
+                spin_boxes[i].setValue(0)
+
+            seq = [i for i in range(1, len(self.translator_interface.translators) + 1)]
+
+            for i in range(len(seq)):
+                spin_boxes[i].setValue(seq[i])
+            self.default_seq_transl = seq
+            self.settings.setValue("default_seq_transl", self.default_seq_transl)
+
+        default_button.clicked.connect(reset)
+
+        main_layout.addWidget(default_button)
+
+        settings_dialog.setLayout(main_layout)
+
+        settings_dialog.exec_()
+
     def open_settings_dialog(self):
         print(inspect.currentframe().f_code.co_name)
 
         # Создаем диалоговое окно настроек интерфейса
-        self.settings_dialog = QDialog(self)
+        settings_dialog = QDialog(self)
 
         if self.switch_night_mode.isChecked():
-            self.settings_dialog.setWindowTitle(self.translate_dialog_windows[0])
+            settings_dialog.setWindowTitle(self.translate_dialog_windows[0])
         else:
-            self.settings_dialog.setWindowTitle(self.translate_dialog_windows[1])
+            settings_dialog.setWindowTitle(self.translate_dialog_windows[1])
 
         main_layout = QVBoxLayout()
 
@@ -528,9 +617,9 @@ class MyWindow(QWidget):
 
         main_layout.addWidget(default_button)
 
-        self.settings_dialog.setLayout(main_layout)
+        settings_dialog.setLayout(main_layout)
 
-        self.settings_dialog.exec_()
+        settings_dialog.exec_()
 
     def reset_theme(self):
         print(inspect.currentframe().f_code.co_name)
@@ -591,6 +680,7 @@ class MyWindow(QWidget):
         switch_center_text = self.google_Translate_to_trans_with_eng("Center alignment") + " (E)"
         switch_night_mode_text = self.google_Translate_to_trans_with_eng("Night mode") + " (N)"
         settings_button_text = self.google_Translate_to_trans_with_eng("Interface settings")
+        settings_translation_button_text = self.google_Translate_to_trans_with_eng("Translation settings")
         next_button_text = self.google_Translate_to_trans_with_eng("next paragraph") + " (Ctrl+Right)"
         next_next_button_text = self.google_Translate_to_trans_with_eng("next sentence") + " (Right)"
         path_to_file_label_text = self.google_Translate_to_trans_with_eng("Path to file: ")
@@ -621,6 +711,7 @@ class MyWindow(QWidget):
         self.switch_center.setText(switch_center_text)
         self.switch_night_mode.setText(switch_night_mode_text)
         self.settings_button.setText(settings_button_text)
+        self.settings_translation_button.setText(settings_translation_button_text)
         self.next_button.setText(next_button_text)
         self.next_next_button.setText(next_next_button_text)
         self.path_to_file_label.setText(path_to_file_label_text)
@@ -845,6 +936,8 @@ class MyWindow(QWidget):
                                  )
 
         # Загрузка настроек
+        self.default_seq_transl = self.settings.value("default_seq_transl", [i for i in range(1,
+                                                                                              len(self.translator_interface.translators) + 1)])
         self.current_font = self.settings.value("current_font", "Tahoma")
         self.visible_trans = self.settings.value("visible_trans", "true")
         self.use_cursor = self.settings.value("use_cursor", "true")
@@ -873,6 +966,7 @@ class MyWindow(QWidget):
         self.window_geometry_height = self.settings.value("window_geometry_height", 600)
 
         # Преобразование типов данных
+        self.default_seq_transl = [int(i) for i in self.default_seq_transl]
         self.visible_trans = True if self.visible_trans.lower() == "true" else False
         self.use_cursor = True if self.use_cursor.lower() == "true" else False
 
@@ -903,9 +997,13 @@ class MyWindow(QWidget):
                                        "Unselected text (original text)", "Sentence highlighting (translated text)",
                                        "Unselected text (translated text)", "default settings"]
         self.original_history_dialog = ["Bookmarks", "Delete", "Delete all", "Edit books history", "Edit songs history"]
+        self.original_prior_transl_dialog = ["Text translation settings", "Translator's name (library and name)",
+                                             "Priority (0 - disable, 1 - highest)", "Default settings"]
 
         self.translate_dialog_windows = [self.google_Translate_init(i) for i in self.orgignal_dialog_window]
         self.translate_history_dialog = [self.google_Translate_init(i) for i in self.original_history_dialog]
+        self.translate_original_prior_transl_dialog = [self.google_Translate_init(i) for i in
+                                                       self.original_prior_transl_dialog]
 
     def read_txt(self):
         print(inspect.currentframe().f_code.co_name)
@@ -1457,16 +1555,20 @@ class MyWindow(QWidget):
         return list_sentences, list_sentences_trans
 
     @lru_cache(maxsize=None)
-    def generate_translate_paragraph(self, lang_orig, lang_trans, currentParagraph):
+    def generate_translate_paragraph(self, lang_orig, lang_trans, currentParagraph, seq):
         print(inspect.currentframe().f_code.co_name + ": (не с кэша)")
 
         save_dict = {}
-        n = 8
 
         for step in range(6):
             """количество этапов фильтрации. """
 
-            for i in range(n):
+            for j in range(len(self.default_seq_transl)):
+                try:
+                    i = self.default_seq_transl.index(j+1)
+                except:
+                    continue
+
 
                 """Перебираем все виды переводчика"""
                 text, text_trans, list_sentences, list_sentences_trans = save_dict.get(i,
@@ -1507,12 +1609,12 @@ class MyWindow(QWidget):
             if i == 0:
                 self.list_sentences, self.list_sentences_trans = self.generate_translate_paragraph(lang_orig,
                                                                                                    lang_trans,
-                                                                                                   self.currentParagraph)
+                                                                                                   self.currentParagraph, str(self.default_seq_transl))
             else:
                 if self.bookmark < len(self.list_paragraph) - i:
                     thread = threading.Thread(
                         target=partial(self.generate_translate_paragraph, lang_orig, lang_trans,
-                                       self.list_paragraph[self.bookmark + i]))
+                                       self.list_paragraph[self.bookmark + i], str(self.default_seq_transl)))
                     thread.start()
 
         if out:
@@ -1539,8 +1641,6 @@ class MyWindow(QWidget):
 
             list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
                                                                                      list_sentences_trans)
-
-
         elif step == 2:
             """2. разбиение на предложение делается с помощью регулярки"""
 
@@ -1591,8 +1691,10 @@ class MyWindow(QWidget):
 
         elif step == 5:
             """5. Разбиение по количество слов на максимально маленькие промежутки"""
-
             count = 5
+            if text_trans=="":
+                text_trans = "translator does not work"
+
             while len(list_sentences) != len(list_sentences_trans):
                 list_sentences, list_sentences_trans = self.parsing_paragraph(text, text_trans, count)
                 count += 5

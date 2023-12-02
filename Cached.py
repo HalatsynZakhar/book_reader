@@ -9,7 +9,6 @@ class Cached():
     def get(self, key):
         key = str(key)
         if key in self.cache:
-            print("cache")
             return self.cache[key]
         if len(self.cache) >= self.cache_size:
             self.cache.popitem()

@@ -11,43 +11,33 @@ except:
 class CachedTranslator(Cached):
     def __init__(self, file):
         Cached.__init__(self, file, cache_size=10000)
-    def my_translate(self, text, dest='en', src='auto', alternative_translate=0, no_return=False):
+        self.translators = ["translators.Bing", "googletrans.googletrans==3.1.0a0", "mtranslate.google", "translators"
+                                                                                                         ".Google",
+                            "translators.Sogou", "translators.Iciba", "translators.Baidu", "translators.Itranslate",
+                            "translators.Deepl",
+                            "translators.Yandex"]
+    def my_translate(self, text, dest='en', src='auto', alternative_translate=0, no_return=False, cache=True):
         try:
-            print("translate:", end=" ")
+            library, trans = self.translators[alternative_translate].split(".", 1)
             key = str((text, dest, src, alternative_translate))
-            res = self.get(key)
-            if res != "":
-                return res
+            if cache:
+                res = self.get(key)
+                if res != "":
+                    print("Библиотека: {}, переводчик: {}, кеш: {}".format(library, trans, "да"))
+                    return res
 
-            if alternative_translate == 0:
-                print("translators: Bing")
-                res = ts.translate_text(text, translator="Bing".lower(), to_language=dest)
-            if alternative_translate == 1:
+            if library=="translators":
+                res = ts.translate_text(text, translator=trans.lower(), to_language=dest)
+            if library=="googletrans":
                 translator = Translator()
                 res = translator.translate(text, dest)
                 res = res.text
-                print("googletrans==3.1.0a0")
-            if alternative_translate == 2:
+            if library=="mtranslate":
                 res = translate(text, dest)
-                print("mtranslate (google)")
-            if alternative_translate == 3:
-                print("translators: Google")
-                res = ts.translate_text(text, translator="Google".lower(), to_language=dest)
-            if alternative_translate == 4:
-                print("translators: Sogou")
-                res = ts.translate_text(text, translator="Sogou".lower(), to_language=dest)
-            if alternative_translate == 5:
-                print("translators: Iciba")
-                res = ts.translate_text(text, translator="Iciba".lower(), to_language=dest)
-            if alternative_translate == 6:
-                print("translators: Baidu")
-                res = ts.translate_text(text, translator="Baidu".lower(), to_language=dest)
-            if alternative_translate == 7:
-                print("translators: Itranslate")
-                res = ts.translate_text(text, translator="Itranslate".lower(), to_language=dest)
 
             self.set(key, res)
 
+            print("Библиотека: {}, переводчик: {}, кеш: {}".format(library, trans, "нет"))
             return res
         except:
             print("Ошибка у переводчика.")
