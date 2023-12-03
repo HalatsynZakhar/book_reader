@@ -1560,7 +1560,7 @@ class MyWindow(QWidget):
 
         save_dict = {}
 
-        for step in range(6):
+        for step in range(7):
             """количество этапов фильтрации. """
 
             for j in range(len(self.default_seq_transl)):
@@ -1692,15 +1692,18 @@ class MyWindow(QWidget):
         elif step == 5:
             """5. Разбиение по количество слов на максимально маленькие промежутки"""
             count = 5
-            if text_trans=="":
-                text_trans = "translator does not work"
-
             while len(list_sentences) != len(list_sentences_trans):
+                if text_trans == "":
+                    break
                 list_sentences, list_sentences_trans = self.parsing_paragraph(text, text_trans, count)
-                count += 5
+
                 list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences,
                                                                                          list_sentences_trans)
-
+                count += 5
+        elif step == 6:
+            text_trans = self.google_Translate_to_trans_with_eng("Translator does not work. Please set the priority for the translator or reset to default settings")
+            list_sentences = [text]
+            list_sentences_trans = [text_trans]
         list_sentences, list_sentences_trans = self.filt_orig_and_trans_sentence(list_sentences, list_sentences_trans)
         return text, text_trans, list_sentences, list_sentences_trans
 
