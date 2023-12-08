@@ -1550,8 +1550,10 @@ class MyWindow(QWidget):
                                                                                  self.filter_text(text + end_space)))
 
     def filt_orig_and_trans_sentence(self, list_sentences, list_sentences_trans):
-        list_sentences = [x.strip() for x in list_sentences if unidecode(x) not in self.combinations]
-        list_sentences_trans = [x.strip() for x in list_sentences_trans if unidecode(x) not in self.combinations]
+        if list_sentences:
+            list_sentences = [x.strip() for x in list_sentences if unidecode(x) not in self.combinations]
+        if list_sentences_trans:
+            list_sentences_trans = [x.strip() for x in list_sentences_trans if unidecode(x) not in self.combinations]
         return list_sentences, list_sentences_trans
 
     @lru_cache(maxsize=None)
@@ -1583,8 +1585,9 @@ class MyWindow(QWidget):
 
                 print("Ступень {} фильтрации. Переводчик {}. {}, {}".format(step, i, list_sentences_1,
                                                                             list_sentences_trans_1))
-                if len(list_sentences_1) == len(list_sentences_trans_1):
-                    return list_sentences_1, list_sentences_trans_1
+                if list_sentences_1 and list_sentences_trans:
+                    if len(list_sentences_1) == len(list_sentences_trans_1):
+                        return list_sentences_1, list_sentences_trans_1
 
     def formint_output_text(self, out=True):
         print(inspect.currentframe().f_code.co_name + ": ")
@@ -1606,12 +1609,14 @@ class MyWindow(QWidget):
             lang_trans = "en"
 
         for i in range(10):
+            """кэширование на 10 страниц с учетом текущей (1 основной поток, 9 паралельным потоком.)"""
             if i == 0:
                 self.list_sentences, self.list_sentences_trans = self.generate_translate_paragraph(lang_orig,
                                                                                                    lang_trans,
                                                                                                    self.currentParagraph, str(self.default_seq_transl))
             else:
                 if self.bookmark < len(self.list_paragraph) - i:
+                    print("Запустился паралельный поток с обработкой страницы +{}".format(i))
                     thread = threading.Thread(
                         target=partial(self.generate_translate_paragraph, lang_orig, lang_trans,
                                        self.list_paragraph[self.bookmark + i], str(self.default_seq_transl)))
