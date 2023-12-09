@@ -574,6 +574,11 @@ class MyWindow(QWidget):
 
         settings_dialog.exec_()
 
+        if self.default_seq_transl == [0 for i in self.translator_interface.translators]:
+            self.default_seq_transl[0] = 1
+            self.settings.setValue("default_seq_transl", self.default_seq_transl)
+        self.formint_output_text()
+
     def open_settings_dialog(self):
         print(inspect.currentframe().f_code.co_name)
 
@@ -1585,7 +1590,7 @@ class MyWindow(QWidget):
 
                 print("Ступень {} фильтрации. Переводчик {}. {}, {}".format(step, i, list_sentences_1,
                                                                             list_sentences_trans_1))
-                if list_sentences_1 and list_sentences_trans:
+                if list_sentences_1 and list_sentences_trans_1:
                     if len(list_sentences_1) == len(list_sentences_trans_1):
                         return list_sentences_1, list_sentences_trans_1
 
@@ -1610,6 +1615,7 @@ class MyWindow(QWidget):
 
         for i in range(10):
             """кэширование на 10 страниц с учетом текущей (1 основной поток, 9 паралельным потоком.)"""
+
             if i == 0:
                 self.list_sentences, self.list_sentences_trans = self.generate_translate_paragraph(lang_orig,
                                                                                                    lang_trans,

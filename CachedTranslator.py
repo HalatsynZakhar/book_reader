@@ -38,7 +38,8 @@ class CachedTranslator(Cached):
             self.set(key, res)
 
             print("Библиотека: {}, переводчик: {}, кеш: {}".format(library, trans, "нет"))
-            return res
+            if res:
+                return res
         except:
             print("Ошибка у переводчика.")
             if no_return:

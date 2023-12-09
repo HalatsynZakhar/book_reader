@@ -1,6 +1,4 @@
 import subprocess
-import importlib
-import os
 
 # список необходимых модулей
 required_modules = ['language_data', 'langcodes', 'qtpy', 'pygame', 'requests', 'beautifulsoup4', 'nltk', 'mtranslate',
