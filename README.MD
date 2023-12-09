@@ -3,7 +3,7 @@
 - **Input data:** book.txt (book.fb2) or the name of a piece of music.
 - **Result**: Displays text with parallel translation point by point on one page. Each sentence is highlighted and spoken out as you read.
 
-**Programming language: Python, main GUI library: PyQt5**
+**Programming language: Python, main GUI library: PyQt5. Operating system: Windows**
 
 **The program has additional options:**
 - You can choose any 2 languages, both native and studied, out of 36 available.
